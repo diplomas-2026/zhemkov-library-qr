@@ -1,0 +1,6 @@
+[
+  {"fullName":"Иванов Артём Сергеевич","roleType":"STUDENT","className":"7А","contact":"+7-927-000-11-01","qrCode":"RDR-79001"},
+  {"fullName":"Петрова Мария Игоревна","roleType":"STUDENT","className":"8Б","contact":"+7-927-000-11-02","qrCode":"RDR-79002"},
+  {"fullName":"Сидоров Николай Павлович","roleType":"TEACHER","className":null,"contact":"+7-927-000-11-03","qrCode":"RDR-79003"},
+  {"fullName":"Кузнецова Алина Денисовна","roleType":"STUDENT","className":"9В","contact":"+7-927-000-11-04","qrCode":"RDR-79004"}
+]

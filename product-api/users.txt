@@ -1,0 +1,3 @@
+email=admin79@school.local; password=Admin123!; role=ADMIN
+email=librarian79@school.local; password=Lib123!; role=LIBRARIAN
+email=reader79@school.local; password=Read123!; role=READER

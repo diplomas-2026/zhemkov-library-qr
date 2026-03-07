@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/library_db}
+    username: ${DB_USERNAME:library}
+    password: ${DB_PASSWORD:library}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:7x3Yw2s6k9p1r4t7v0z2b5n8m1q4s7u0x3y6a9c2e5g8i1k4}
+    expiration-minutes: 600
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
