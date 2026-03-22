@@ -71,5 +71,20 @@ jobs:
 
       - name: Smoke check
         run: |
+          for i in $(seq 1 10); do
+            if curl -fsS "https://${{ env.FQDN }}/" >/dev/null; then
+              break
+            fi
+            sleep 3
+          done
+
+          for i in $(seq 1 10); do
+            code="$(curl -sS -o /dev/null -w '%{http_code}\n' "https://${{ env.FQDN }}/api/dashboard" || true)"
+            if echo "$code" | grep -E '^(200|401|403)$' >/dev/null; then
+              break
+            fi
+            sleep 3
+          done
+
           curl -fsS "https://${{ env.FQDN }}/" >/dev/null
           curl -fsS -o /dev/null -w '%{http_code}\n' "https://${{ env.FQDN }}/api/dashboard" | grep -E '^(200|401|403)$'
