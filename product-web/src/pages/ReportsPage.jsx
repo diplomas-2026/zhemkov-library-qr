@@ -8,6 +8,7 @@ export default function ReportsPage() {
   const [form, setForm] = useState({ type: 'ISSUES_BY_PERIOD', periodFrom: '2026-01-01', periodTo: '2026-12-31' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const user = getUser();
@@ -38,6 +39,38 @@ export default function ReportsPage() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const download = async (reportId) => {
+    setDownloadingId(reportId);
+    setError('');
+    setSuccess('');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/reports/${reportId}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.status === 401 || res.status === 403) {
+        throw new Error('Недостаточно прав или истекла сессия');
+      }
+      if (!res.ok) {
+        throw new Error('Не удалось скачать файл');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report-${reportId}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      setSuccess('Файл скачан');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -109,7 +142,17 @@ export default function ReportsPage() {
                 <td>{report.type}</td>
                 <td>{report.periodFrom} - {report.periodTo}</td>
                 <td>{report.generatedBy}</td>
-                <td><a href={`${API_URL}/api/reports/${report.id}/download`} target="_blank" rel="noreferrer">Скачать</a></td>
+                <td>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => download(report.id)}
+                    disabled={downloadingId === report.id}
+                  >
+                    {downloadingId === report.id && <span className="spinner" />}
+                    Скачать
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
