@@ -151,7 +151,10 @@ export default function ReaderDetailsPage() {
             <span className="badge">Класс: {reader.className || '—'}</span>
           </p>
         </div>
-        <Link className="btn btn-secondary" to="/readers">К списку</Link>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link className="btn btn-secondary" to={`/loans?code=${encodeURIComponent(reader.qrCode)}`}>Выдача и возврат</Link>
+          <Link className="btn btn-ghost" to="/readers">К списку</Link>
+        </div>
       </header>
 
       <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(12, 1fr)' }}>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { request } from '../lib/api';
 import { getUser, hasRole } from '../lib/auth';
 import Notice from '../components/Notice';
 import { loanStatusLabel } from '../lib/labels';
+import ScannerDialog from '../components/ScannerDialog';
 
 export default function LoansPage() {
   const [loans, setLoans] = useState([]);
@@ -13,6 +15,8 @@ export default function LoansPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [filterCode, setFilterCode] = useState('');
+  const [scanOpen, setScanOpen] = useState(false);
+  const [searchParams] = useSearchParams();
   const user = getUser();
 
   const load = async () => {
@@ -33,6 +37,13 @@ export default function LoansPage() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      setFilterCode(code);
+      setForm((prev) => ({ ...prev, readerQrCode: code }));
+    }
+  }, [searchParams]);
 
   const issue = async (e) => {
     e.preventDefault();
@@ -151,6 +162,13 @@ export default function LoansPage() {
           <button
             type="button"
             className="btn btn-secondary"
+            onClick={() => setScanOpen(true)}
+          >
+            Открыть сканер
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
             onClick={() => setFilterCode('')}
             disabled={!filterCode}
           >
@@ -161,6 +179,17 @@ export default function LoansPage() {
           Возврат доступен только если указан штрихкод читателя. Используйте карточку читателя или сканер в разделе “Читатели”.
         </p>
       </div>
+
+      <ScannerDialog
+        open={scanOpen}
+        title="Сканирование штрихкода"
+        hint="Разрешите доступ к камере. Штрихкод можно сканировать с карточки читателя."
+        onClose={() => setScanOpen(false)}
+        onDetected={(text) => {
+          setFilterCode(text);
+          setForm((prev) => ({ ...prev, readerQrCode: text }));
+        }}
+      />
 
       <div className="table-wrap">
         <table>
