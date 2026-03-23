@@ -51,9 +51,9 @@ export default function ReadersPage() {
       <header className="page-header">
         <div>
           <div className="kicker">Обслуживание</div>
-          <h1 className="page-title">Читатели и <span className="hl">QR</span></h1>
+          <h1 className="page-title">Читатели и <span className="hl">штрихкод</span></h1>
           <p className="page-subtitle">
-            Быстрый поиск читателя по QR-коду и просмотр истории выдач.
+            Быстрый поиск читателя по штрихкоду и просмотр истории выдач.
           </p>
         </div>
       </header>

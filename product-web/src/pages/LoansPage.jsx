@@ -12,6 +12,7 @@ export default function LoansPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [filterCode, setFilterCode] = useState('');
   const user = getUser();
 
   const load = async () => {
@@ -39,6 +40,9 @@ export default function LoansPage() {
     setError('');
     setSuccess('');
     try {
+      if (!form.readerQrCode) {
+        throw new Error('Укажите штрихкод читателя');
+      }
       await request('/api/loans/issue', {
         method: 'POST',
         body: JSON.stringify({
@@ -70,6 +74,10 @@ export default function LoansPage() {
       setSaving(false);
     }
   };
+
+  const filteredLoans = filterCode
+    ? loans.filter((l) => l.readerQrCode === filterCode)
+    : loans;
 
   return (
     <section>
@@ -105,7 +113,7 @@ export default function LoansPage() {
       {hasRole(user, ['ADMIN', 'LIBRARIAN']) && (
         <form className="panel grid-form" onSubmit={issue}>
           <label className="col-3">
-            QR читателя
+            Штрихкод читателя
             <input
               placeholder="Например, RDR-79001"
               value={form.readerQrCode}
@@ -134,11 +142,31 @@ export default function LoansPage() {
         </form>
       )}
 
+      <div className="panel panel-soft" style={{ marginBottom: 12 }}>
+        <div className="inline-form" style={{ margin: 0 }}>
+          <label style={{ flex: 2 }}>
+            Штрихкод читателя для возврата
+            <input value={filterCode} onChange={(e) => setFilterCode(e.target.value)} placeholder="Введите штрихкод читателя" />
+          </label>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setFilterCode('')}
+            disabled={!filterCode}
+          >
+            Сбросить фильтр
+          </button>
+        </div>
+        <p className="page-subtitle" style={{ marginTop: 8 }}>
+          Возврат доступен только если указан штрихкод читателя. Используйте карточку читателя или сканер в разделе “Читатели”.
+        </p>
+      </div>
+
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Книга</th><th>Читатель</th><th>QR</th><th>Срок</th><th>Статус</th><th>Действие</th></tr></thead>
+          <thead><tr><th>Книга</th><th>Читатель</th><th>Штрихкод</th><th>Срок</th><th>Статус</th><th>Действие</th></tr></thead>
           <tbody>
-            {loans.map((loan) => (
+            {filteredLoans.map((loan) => (
               <tr key={loan.id}>
                 <td>{loan.bookTitle}</td>
                 <td>{loan.readerName}</td>
@@ -146,7 +174,7 @@ export default function LoansPage() {
                 <td>{new Date(loan.dueAt).toLocaleString('ru-RU')}</td>
                 <td><span className="badge">{loanStatusLabel(loan.status)}</span></td>
                 <td>
-                  {hasRole(user, ['ADMIN', 'LIBRARIAN']) && loan.status === 'ACTIVE' ? (
+                  {hasRole(user, ['ADMIN', 'LIBRARIAN']) && loan.status === 'ACTIVE' && filterCode && loan.readerQrCode === filterCode ? (
                     <button type="button" className="btn btn-secondary" onClick={() => returnLoan(loan.id)} disabled={saving}>
                       {saving && <span className="spinner" />}
                       Принять возврат
@@ -157,6 +185,9 @@ export default function LoansPage() {
                 </td>
               </tr>
             ))}
+            {filteredLoans.length === 0 && (
+              <tr><td colSpan={6} style={{ color: 'rgba(23,20,18,0.60)' }}>Нет выдач для выбранного штрихкода</td></tr>
+            )}
           </tbody>
         </table>
       </div>
