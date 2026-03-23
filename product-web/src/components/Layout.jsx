@@ -30,6 +30,9 @@ export default function Layout({ children }) {
               <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : undefined)}>Отчеты</NavLink>
             </>
           )}
+          {hasRole(user, ['READER']) && (
+            <NavLink to="/my-code" className={({ isActive }) => (isActive ? 'active' : undefined)}>Мой штрихкод</NavLink>
+          )}
           {hasRole(user, ['ADMIN']) && (
             <NavLink to="/admin/users" className={({ isActive }) => (isActive ? 'active' : undefined)}>
               Администрирование

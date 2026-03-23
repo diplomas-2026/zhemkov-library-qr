@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 public class ReaderService {
     private final ReaderRepository readerRepository;
     private final LoanService loanService;
+    private final CurrentUserService currentUserService;
 
-    public ReaderService(ReaderRepository readerRepository, LoanService loanService) {
+    public ReaderService(ReaderRepository readerRepository, LoanService loanService, CurrentUserService currentUserService) {
         this.readerRepository = readerRepository;
         this.loanService = loanService;
+        this.currentUserService = currentUserService;
     }
 
     public List<ReaderDtos.ReaderResponse> list() {
@@ -45,6 +47,21 @@ public class ReaderService {
         ReaderEntity reader = readerRepository.findByQrCode(qrCode).orElseThrow(() -> new IllegalArgumentException("QR-код не найден"));
         List<LoanDtos.LoanResponse> loans = loanService.listByReader(reader.getId());
         return new ReaderDtos.ReaderQrLookupResponse(toResponse(reader), loans);
+    }
+
+    @Transactional
+    public ReaderDtos.ReaderResponse myReader() {
+        var user = currentUserService.getCurrentUser();
+        ReaderEntity reader = readerRepository.findByUserId(user.getId())
+                .orElseGet(() -> readerRepository.findByContact(user.getEmail()).orElse(null));
+        if (reader == null) {
+            throw new IllegalArgumentException("Профиль читателя не найден");
+        }
+        if (reader.getUser() == null) {
+            reader.setUser(user);
+            readerRepository.save(reader);
+        }
+        return toResponse(reader);
     }
 
     public ReaderDtos.ReaderQrLookupResponse profile(Long id) {

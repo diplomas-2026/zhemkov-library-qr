@@ -44,6 +44,7 @@ public class SeedDataInitializer implements CommandLineRunner {
         seedUsers();
         seedBooksAndCopies();
         seedReaders();
+        linkReaderUsers();
         seedLoansAndComments();
         writeUsersFile();
     }
@@ -102,6 +103,19 @@ public class SeedDataInitializer implements CommandLineRunner {
             reader.setClassName(item.className());
             reader.setContact(item.contact());
             reader.setQrCode(item.qrCode());
+            readerRepository.save(reader);
+        }
+    }
+
+    private void linkReaderUsers() {
+        var readerUser = userRepository.findByEmail("reader79@school.local").orElse(null);
+        if (readerUser == null) {
+            return;
+        }
+        var reader = readerRepository.findByUserId(readerUser.getId())
+                .orElseGet(() -> readerRepository.findByContact(readerUser.getEmail()).orElse(null));
+        if (reader != null && reader.getUser() == null) {
+            reader.setUser(readerUser);
             readerRepository.save(reader);
         }
     }

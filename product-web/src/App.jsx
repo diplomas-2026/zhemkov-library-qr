@@ -12,6 +12,7 @@ import ReportsPage from './pages/ReportsPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import BookDetailsPage from './pages/BookDetailsPage';
 import ReaderDetailsPage from './pages/ReaderDetailsPage';
+import MyCodePage from './pages/MyCodePage';
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/readers/:id" element={<ProtectedRoute roles={['ADMIN', 'LIBRARIAN']}><Layout><ReaderDetailsPage /></Layout></ProtectedRoute>} />
       <Route path="/loans" element={<ProtectedRoute roles={['ADMIN', 'LIBRARIAN']}><Layout><LoansPage /></Layout></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute roles={['ADMIN', 'LIBRARIAN']}><Layout><ReportsPage /></Layout></ProtectedRoute>} />
+      <Route path="/my-code" element={<ProtectedRoute roles={['READER']}><Layout><MyCodePage /></Layout></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['ADMIN']}><Layout><AdminUsersPage /></Layout></ProtectedRoute>} />
     </Routes>
   );

@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReaderRepository extends JpaRepository<ReaderEntity, Long> {
     Optional<ReaderEntity> findByQrCode(String qrCode);
+    Optional<ReaderEntity> findByUserId(Long userId);
+    Optional<ReaderEntity> findByContact(String contact);
 }

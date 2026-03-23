@@ -1,4 +1,5 @@
 [
+  {"fullName":"Читатель школы №79","roleType":"STUDENT","className":"7А","contact":"reader79@school.local","qrCode":"RDR-79000"},
   {"fullName":"Иванов Артём Сергеевич","roleType":"STUDENT","className":"7А","contact":"+7-927-000-11-01","qrCode":"RDR-79001"},
   {"fullName":"Петрова Мария Игоревна","roleType":"STUDENT","className":"8Б","contact":"+7-927-000-11-02","qrCode":"RDR-79002"},
   {"fullName":"Сидоров Николай Павлович","roleType":"TEACHER","className":null,"contact":"+7-927-000-11-03","qrCode":"RDR-79003"},

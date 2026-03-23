@@ -26,6 +26,12 @@ public class ReaderController {
         return readerService.byQr(qrCode);
     }
 
+    @PreAuthorize("hasRole('READER')")
+    @GetMapping("/me")
+    public ReaderDtos.ReaderResponse myReader() {
+        return readerService.myReader();
+    }
+
     @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
     @GetMapping("/{id}/profile")
     public ReaderDtos.ReaderQrLookupResponse profile(@PathVariable Long id) {

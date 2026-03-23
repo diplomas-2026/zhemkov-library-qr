@@ -19,6 +19,9 @@ public class ReaderEntity {
     private String contact;
     @Column(name = "qr_code", nullable = false, unique = true)
     private String qrCode;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -33,4 +36,6 @@ public class ReaderEntity {
     public void setContact(String contact) { this.contact = contact; }
     public String getQrCode() { return qrCode; }
     public void setQrCode(String qrCode) { this.qrCode = qrCode; }
+    public UserEntity getUser() { return user; }
+    public void setUser(UserEntity user) { this.user = user; }
 }
