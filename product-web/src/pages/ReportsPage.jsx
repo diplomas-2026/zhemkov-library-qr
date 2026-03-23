@@ -18,18 +18,37 @@ export default function ReportsPage() {
 
   return (
     <section>
-      <h2>Отчеты</h2>
+      <header className="page-header">
+        <div>
+          <div className="kicker">Документы</div>
+          <h1 className="page-title">Отчеты и <span className="hl">выгрузки</span></h1>
+          <p className="page-subtitle">
+            Формируйте отчеты по движению фонда и выдачам. CSV удобно открывается в Excel.
+          </p>
+        </div>
+      </header>
       {hasRole(user, ['ADMIN', 'LIBRARIAN']) && (
-        <form className="card grid-form" onSubmit={create}>
-          <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-            <option value="FUND_MOVEMENT">Движение фонда</option>
-            <option value="ISSUES_BY_PERIOD">Выдачи за период</option>
-            <option value="OVERDUE">Просрочки</option>
-            <option value="WRITTEN_OFF">Списания</option>
-          </select>
-          <input type="date" value={form.periodFrom} onChange={(e) => setForm({ ...form, periodFrom: e.target.value })} />
-          <input type="date" value={form.periodTo} onChange={(e) => setForm({ ...form, periodTo: e.target.value })} />
-          <button>Сформировать</button>
+        <form className="panel grid-form" onSubmit={create}>
+          <label className="col-6">
+            Тип отчета
+            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+              <option value="FUND_MOVEMENT">Движение фонда</option>
+              <option value="ISSUES_BY_PERIOD">Выдачи за период</option>
+              <option value="OVERDUE">Просрочки</option>
+              <option value="WRITTEN_OFF">Списания</option>
+            </select>
+          </label>
+          <label className="col-3">
+            Начало периода
+            <input type="date" value={form.periodFrom} onChange={(e) => setForm({ ...form, periodFrom: e.target.value })} />
+          </label>
+          <label className="col-3">
+            Конец периода
+            <input type="date" value={form.periodTo} onChange={(e) => setForm({ ...form, periodTo: e.target.value })} />
+          </label>
+          <div className="col-12 form-actions">
+            <button className="btn btn-primary">Сформировать</button>
+          </div>
         </form>
       )}
 
@@ -42,7 +61,7 @@ export default function ReportsPage() {
                 <td>{report.type}</td>
                 <td>{report.periodFrom} - {report.periodTo}</td>
                 <td>{report.generatedBy}</td>
-                <td><a href={`${API_URL}/api/reports/${report.id}/download`} target="_blank">Скачать</a></td>
+                <td><a href={`${API_URL}/api/reports/${report.id}/download`} target="_blank" rel="noreferrer">Скачать</a></td>
               </tr>
             ))}
           </tbody>

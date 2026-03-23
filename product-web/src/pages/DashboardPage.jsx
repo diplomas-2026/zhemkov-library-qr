@@ -8,7 +8,16 @@ export default function DashboardPage() {
     request('/api/dashboard').then(setStats);
   }, []);
 
-  if (!stats) return <div>Загрузка...</div>;
+  if (!stats) {
+    return (
+      <section>
+        <div className="panel panel-soft">
+          <div className="kicker">Загрузка</div>
+          <h2 style={{ marginTop: 10 }}>Подготавливаем обзор библиотеки…</h2>
+        </div>
+      </section>
+    );
+  }
 
   const cards = [
     ['Книг', stats.totalBooks],
@@ -22,10 +31,18 @@ export default function DashboardPage() {
 
   return (
     <section>
-      <h2>Обзор библиотеки</h2>
+      <header className="page-header">
+        <div>
+          <div className="kicker">Фонд и обслуживание</div>
+          <h1 className="page-title">Обзор <span className="hl">библиотеки</span></h1>
+          <p className="page-subtitle">
+            Ключевые показатели по книгам, экземплярам, выдачам и читателям — чтобы видеть картину за день.
+          </p>
+        </div>
+      </header>
       <div className="grid-cards">
         {cards.map(([label, value]) => (
-          <article className="metric" key={label}>
+          <article className="panel metric" key={label}>
             <h3>{label}</h3>
             <p>{value}</p>
           </article>

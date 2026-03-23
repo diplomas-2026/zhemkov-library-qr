@@ -35,18 +35,41 @@ export default function LoansPage() {
 
   return (
     <section>
-      <h2>Выдача и возврат</h2>
+      <header className="page-header">
+        <div>
+          <div className="kicker">Обслуживание</div>
+          <h1 className="page-title">Выдача и <span className="hl">возврат</span></h1>
+          <p className="page-subtitle">
+            Оформляйте выдачу по QR-коду читателя, а возврат — в один клик.
+          </p>
+        </div>
+      </header>
       {hasRole(user, ['ADMIN', 'LIBRARIAN']) && (
-        <form className="card grid-form" onSubmit={issue}>
-          <input placeholder="QR читателя" value={form.readerQrCode} onChange={(e) => setForm({ ...form, readerQrCode: e.target.value })} />
-          <select value={form.copyId} onChange={(e) => setForm({ ...form, copyId: e.target.value })}>
-            <option value="">Выберите экземпляр</option>
-            {copies.filter((c) => c.status === 'AVAILABLE').map((c) => (
-              <option key={c.id} value={c.id}>{c.inventoryNumber} - {c.bookTitle}</option>
-            ))}
-          </select>
-          <input type="datetime-local" value={form.dueAt} onChange={(e) => setForm({ ...form, dueAt: e.target.value })} />
-          <button>Оформить выдачу</button>
+        <form className="panel grid-form" onSubmit={issue}>
+          <label className="col-3">
+            QR читателя
+            <input
+              placeholder="Например, RDR-79001"
+              value={form.readerQrCode}
+              onChange={(e) => setForm({ ...form, readerQrCode: e.target.value })}
+            />
+          </label>
+          <label className="col-6">
+            Экземпляр
+            <select value={form.copyId} onChange={(e) => setForm({ ...form, copyId: e.target.value })}>
+              <option value="">Выберите доступный экземпляр</option>
+              {copies.filter((c) => c.status === 'AVAILABLE').map((c) => (
+                <option key={c.id} value={c.id}>{c.inventoryNumber} — {c.bookTitle}</option>
+              ))}
+            </select>
+          </label>
+          <label className="col-3">
+            Срок возврата
+            <input type="datetime-local" value={form.dueAt} onChange={(e) => setForm({ ...form, dueAt: e.target.value })} />
+          </label>
+          <div className="col-12 form-actions">
+            <button className="btn btn-primary">Оформить выдачу</button>
+          </div>
         </form>
       )}
 
@@ -60,8 +83,16 @@ export default function LoansPage() {
                 <td>{loan.readerName}</td>
                 <td>{loan.readerQrCode}</td>
                 <td>{new Date(loan.dueAt).toLocaleString('ru-RU')}</td>
-                <td>{loan.status}</td>
-                <td>{hasRole(user, ['ADMIN', 'LIBRARIAN']) && loan.status === 'ACTIVE' ? <button onClick={() => returnLoan(loan.id)}>Принять возврат</button> : '-'}</td>
+                <td><span className="badge">{loan.status}</span></td>
+                <td>
+                  {hasRole(user, ['ADMIN', 'LIBRARIAN']) && loan.status === 'ACTIVE' ? (
+                    <button type="button" className="btn btn-secondary" onClick={() => returnLoan(loan.id)}>
+                      Принять возврат
+                    </button>
+                  ) : (
+                    <span style={{ color: 'rgba(23, 20, 18, 0.50)' }}>—</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

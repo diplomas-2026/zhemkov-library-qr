@@ -25,14 +25,38 @@ export default function LoginPage() {
 
   return (
     <div className="login-wrap">
-      <form className="card" onSubmit={submit}>
-        <h1>Вход в библиотечную систему</h1>
-        <p>Школа №79, Самара</p>
-        <label>Email<input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-        <label>Пароль<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-        {error && <div className="error">{error}</div>}
-        <button type="submit">Войти</button>
-      </form>
+      <div className="login-grid">
+        <section className="login-hero">
+          <div className="kicker">Государственная библиотека</div>
+          <h1 style={{ marginTop: 14 }}>
+            Управляйте фондом и выдачей книг — <span className="hl">по QR</span>, аккуратно и быстро
+          </h1>
+          <p>
+            Тёплый интерфейс без лишнего шума: каталог, читатели, выдача и отчеты — в одном месте.
+          </p>
+        </section>
+        <form className="panel login-form" onSubmit={submit}>
+          <h2>Вход в систему</h2>
+          <p>Школа №79, Самара</p>
+          <label>
+            Email
+            <input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" />
+          </label>
+          <label>
+            Пароль
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+          </label>
+          {error && <div className="error">{error}</div>}
+          <button className="btn btn-primary" type="submit">Войти</button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => { setEmail('librarian79@school.local'); setPassword('Lib123!'); }}
+          >
+            Подставить тестовые данные
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

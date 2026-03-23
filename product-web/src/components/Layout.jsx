@@ -11,27 +11,35 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <Link className="brand" to="/dashboard">Библиотека №79</Link>
-        <nav>
-          <NavLink to="/dashboard">Дашборд</NavLink>
-          <NavLink to="/books">Каталог</NavLink>
-          <NavLink to="/readers">Читатели</NavLink>
-          <NavLink to="/loans">Выдача/Возврат</NavLink>
-          <NavLink to="/reports">Отчеты</NavLink>
-          {hasRole(user, ['ADMIN']) && <NavLink to="/admin/users">Пользователи</NavLink>}
+    <div className="shell">
+      <aside className="nav" aria-label="Навигация">
+        <Link className="brand" to="/dashboard">
+          <strong>Государственная библиотека №79</strong>
+          <span>Самара • школьный фонд и выдача по QR</span>
+        </Link>
+        <h3>Разделы</h3>
+        <nav className="nav-links">
+          <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : undefined)}>Обзор</NavLink>
+          <NavLink to="/books" className={({ isActive }) => (isActive ? 'active' : undefined)}>Каталог</NavLink>
+          <NavLink to="/readers" className={({ isActive }) => (isActive ? 'active' : undefined)}>Читатели</NavLink>
+          <NavLink to="/loans" className={({ isActive }) => (isActive ? 'active' : undefined)}>Выдача и возврат</NavLink>
+          <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : undefined)}>Отчеты</NavLink>
+          {hasRole(user, ['ADMIN']) && (
+            <NavLink to="/admin/users" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+              Администрирование
+            </NavLink>
+          )}
         </nav>
       </aside>
       <main className="content">
-        <header className="topbar">
-          <div>
-            <strong>{user?.fullName}</strong>
-            <span>{user?.role}</span>
+        <header className="app-header">
+          <div className="user-meta">
+            <strong>{user?.fullName || 'Пользователь'}</strong>
+            {user?.role && <span className="badge badge-accent">{user.role}</span>}
           </div>
-          <button onClick={onLogout}>Выйти</button>
+          <button className="btn btn-secondary" onClick={onLogout}>Выйти</button>
         </header>
-        {children}
+        <div className="page">{children}</div>
       </main>
     </div>
   );

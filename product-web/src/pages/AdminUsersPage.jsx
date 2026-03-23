@@ -8,7 +8,15 @@ export default function AdminUsersPage() {
 
   return (
     <section>
-      <h2>Управление пользователями</h2>
+      <header className="page-header">
+        <div>
+          <div className="kicker">Администрирование</div>
+          <h1 className="page-title">Пользователи и <span className="hl">доступ</span></h1>
+          <p className="page-subtitle">
+            Просмотр учетных записей и ролей. Изменение прав — через администратора системы.
+          </p>
+        </div>
+      </header>
       <div className="table-wrap">
         <table>
           <thead><tr><th>Email</th><th>ФИО</th><th>Роль</th><th>Активен</th></tr></thead>
