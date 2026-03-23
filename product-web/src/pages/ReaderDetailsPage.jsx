@@ -63,6 +63,7 @@ export default function ReaderDetailsPage() {
 
   const activeLoans = useMemo(() => (data?.loans || []).filter((l) => l.status === 'ACTIVE'), [data]);
   const returnedLoans = useMemo(() => (data?.loans || []).filter((l) => l.status !== 'ACTIVE'), [data]);
+  const availableCopies = useMemo(() => copies.filter((c) => c.status === 'AVAILABLE'), [copies]);
 
   if (error) {
     return (
@@ -92,7 +93,6 @@ export default function ReaderDetailsPage() {
   }
 
   const reader = data.reader;
-  const availableCopies = useMemo(() => copies.filter((c) => c.status === 'AVAILABLE'), [copies]);
 
   const issue = async (e) => {
     e.preventDefault();
