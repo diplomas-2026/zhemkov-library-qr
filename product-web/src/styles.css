@@ -122,6 +122,32 @@ label { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
   box-shadow: 0 10px 26px rgba(23, 20, 18, 0.10);
 }
 .error { color: #8a1d0a; font-size: 14px; }
+.notice {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 12px 12px;
+  background: rgba(255,255,255,0.62);
+  box-shadow: 0 12px 28px rgba(23, 20, 18, 0.10);
+  backdrop-filter: blur(10px);
+}
+.notice-info { border-color: rgba(23, 20, 18, 0.14); }
+.notice-success { border-color: rgba(60, 140, 80, 0.28); background: rgba(60, 140, 80, 0.10); }
+.notice-error { border-color: rgba(178, 74, 47, 0.34); background: rgba(178, 74, 47, 0.10); }
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(23, 20, 18, 0.18);
+  border-top-color: rgba(201, 130, 43, 0.85);
+  animation: spin 900ms linear infinite;
+  display: inline-block;
+  vertical-align: -3px;
+  margin-right: 8px;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .kicker {
   display: inline-flex;
   align-items: center;

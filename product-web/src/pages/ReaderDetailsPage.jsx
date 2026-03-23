@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { request } from '../lib/api';
+import Notice from '../components/Notice';
 
 function formatDateTime(value) {
   if (!value) return '—';
@@ -16,14 +17,18 @@ export default function ReaderDetailsPage() {
   const readerId = Number(id);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setError('');
+    setLoading(true);
     try {
       const profile = await request(`/api/readers/${readerId}/profile`);
       setData(profile);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,9 +45,9 @@ export default function ReaderDetailsPage() {
     return (
       <section>
         <div className="panel">
-          <div className="kicker">Ошибка</div>
-          <h2 style={{ marginTop: 10 }}>Не удалось загрузить читателя</h2>
-          <p style={{ marginTop: 10 }}>{error}</p>
+          <Notice type="error" title="Не удалось загрузить читателя">
+            {error}
+          </Notice>
           <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link className="btn btn-secondary" to="/readers">К списку</Link>
             <button type="button" className="btn btn-primary" onClick={load}>Повторить</button>
@@ -52,11 +57,11 @@ export default function ReaderDetailsPage() {
     );
   }
 
-  if (!data) {
+  if (loading && !data) {
     return (
       <section>
         <div className="panel panel-soft">
-          <div className="kicker">Загрузка</div>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
           <h2 style={{ marginTop: 10 }}>Открываем карточку читателя…</h2>
         </div>
       </section>
@@ -130,4 +135,3 @@ export default function ReaderDetailsPage() {
     </section>
   );
 }
-

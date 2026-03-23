@@ -1,24 +1,41 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
+import Notice from '../components/Notice';
 
 export default function ReadersPage() {
   const [readers, setReaders] = useState([]);
   const [qrCode, setQrCode] = useState('RDR-79001');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [finding, setFinding] = useState(false);
   const navigate = useNavigate();
 
-  const load = async () => setReaders(await request('/api/readers'));
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setReaders(await request('/api/readers'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => { load(); }, []);
 
   const findByQr = async (e) => {
     e.preventDefault();
     setError('');
     try {
+      setFinding(true);
       const data = await request(`/api/readers/qr/${encodeURIComponent(qrCode)}`);
       navigate(`/readers/${data.reader.id}`);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setFinding(false);
     }
   };
 
@@ -36,10 +53,26 @@ export default function ReadersPage() {
 
       <form onSubmit={findByQr} className="panel panel-soft inline-form">
         <input value={qrCode} onChange={(e) => setQrCode(e.target.value)} placeholder="QR-код читателя (например, RDR-79001)" />
-        <button className="btn btn-primary">Найти</button>
+        <button className="btn btn-primary" disabled={finding}>
+          {finding && <span className="spinner" />}
+          Найти
+        </button>
       </form>
 
-      {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
+      {error && (
+        <div style={{ marginTop: 12 }}>
+          <Notice type="error" title="Ошибка" onClose={() => setError('')}>
+            {error}
+          </Notice>
+        </div>
+      )}
+
+      {loading && (
+        <div className="panel panel-soft" style={{ marginTop: 12 }}>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
+          <h2 style={{ marginTop: 10 }}>Обновляем список читателей…</h2>
+        </div>
+      )}
 
       <div className="table-wrap">
         <table>

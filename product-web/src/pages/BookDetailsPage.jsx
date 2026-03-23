@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiAssetUrl, request } from '../lib/api';
 import { getUser, hasRole } from '../lib/auth';
 import placeholderCover from '../assets/cover-placeholder.svg';
+import Notice from '../components/Notice';
+import { setFlash } from '../lib/flash';
 
 function coverSrc(coverUrl) {
   return apiAssetUrl(coverUrl) || placeholderCover;
@@ -15,6 +17,8 @@ export default function BookDetailsPage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(null);
   const user = getUser();
   const canManage = hasRole(user, ['ADMIN', 'LIBRARIAN']);
@@ -22,6 +26,8 @@ export default function BookDetailsPage() {
 
   const load = async () => {
     setError('');
+    setSuccess('');
+    setLoading(true);
     try {
       const data = await request(`/api/books/${bookId}`);
       setBook(data);
@@ -36,6 +42,8 @@ export default function BookDetailsPage() {
       });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,6 +64,7 @@ export default function BookDetailsPage() {
     if (!canManage) return;
     setSaving(true);
     setError('');
+    setSuccess('');
     try {
       const payload = {
         ...form,
@@ -66,6 +75,7 @@ export default function BookDetailsPage() {
         body: JSON.stringify(payload)
       });
       setBook(data);
+      setSuccess('Изменения сохранены');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -80,6 +90,7 @@ export default function BookDetailsPage() {
     setError('');
     try {
       await request(`/api/books/${bookId}`, { method: 'DELETE' });
+      setFlash({ type: 'success', text: 'Книга удалена' });
       navigate('/books');
     } catch (err) {
       setError(err.message);
@@ -91,12 +102,14 @@ export default function BookDetailsPage() {
   const uploadCover = async (file) => {
     if (!canManage) return;
     setFileError('');
+    setSuccess('');
     if (!file) return;
     const fd = new FormData();
     fd.append('file', file);
     try {
       const data = await request(`/api/books/${bookId}/cover`, { method: 'POST', body: fd });
       setBook(data);
+      setSuccess('Обложка обновлена');
     } catch (err) {
       setFileError(err.message);
     }
@@ -104,9 +117,12 @@ export default function BookDetailsPage() {
 
   const clearCover = async () => {
     if (!canManage) return;
+    setFileError('');
+    setSuccess('');
     try {
       const data = await request(`/api/books/${bookId}/cover`, { method: 'DELETE' });
       setBook(data);
+      setSuccess('Обложка удалена');
     } catch (err) {
       setFileError(err.message);
     }
@@ -128,11 +144,11 @@ export default function BookDetailsPage() {
     );
   }
 
-  if (!book) {
+  if (loading && !book) {
     return (
       <section>
         <div className="panel panel-soft">
-          <div className="kicker">Загрузка</div>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
           <h2 style={{ marginTop: 10 }}>Открываем карточку книги…</h2>
         </div>
       </section>
@@ -154,6 +170,20 @@ export default function BookDetailsPage() {
           {canManage && <button type="button" className="btn btn-danger" onClick={remove} disabled={saving}>Удалить</button>}
         </div>
       </header>
+      {success && (
+        <div style={{ marginBottom: 12 }}>
+          <Notice type="success" title="Готово" onClose={() => setSuccess('')}>
+            {success}
+          </Notice>
+        </div>
+      )}
+      {fileError && (
+        <div style={{ marginBottom: 12 }}>
+          <Notice type="error" title="Ошибка" onClose={() => setFileError('')}>
+            {fileError}
+          </Notice>
+        </div>
+      )}
 
       <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(12, 1fr)' }}>
         <article className="panel" style={{ gridColumn: 'span 4', padding: 14 }}>
@@ -177,7 +207,6 @@ export default function BookDetailsPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-secondary" onClick={clearCover} disabled={!book.coverUrl}>Убрать обложку</button>
               </div>
-              {fileError && <div className="error">{fileError}</div>}
             </div>
           )}
         </article>
@@ -230,7 +259,10 @@ export default function BookDetailsPage() {
                   <textarea rows={5} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </label>
                 <div className="col-12 form-actions">
-                  <button className="btn btn-primary" disabled={saving}>Сохранить</button>
+                  <button className="btn btn-primary" disabled={saving}>
+                    {saving && <span className="spinner" />}
+                    Сохранить
+                  </button>
                 </div>
               </div>
             </form>
@@ -240,4 +272,3 @@ export default function BookDetailsPage() {
     </section>
   );
 }
-

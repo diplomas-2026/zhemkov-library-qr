@@ -1,19 +1,44 @@
 import { useEffect, useState } from 'react';
 import { request, API_URL } from '../lib/api';
 import { getUser, hasRole } from '../lib/auth';
+import Notice from '../components/Notice';
 
 export default function ReportsPage() {
   const [reports, setReports] = useState([]);
   const [form, setForm] = useState({ type: 'ISSUES_BY_PERIOD', periodFrom: '2026-01-01', periodTo: '2026-12-31' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const user = getUser();
 
-  const load = async () => setReports(await request('/api/reports'));
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setReports(await request('/api/reports'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => { load(); }, []);
 
   const create = async (e) => {
     e.preventDefault();
-    await request('/api/reports/generate', { method: 'POST', body: JSON.stringify(form) });
-    await load();
+    setSaving(true);
+    setError('');
+    setSuccess('');
+    try {
+      await request('/api/reports/generate', { method: 'POST', body: JSON.stringify(form) });
+      setSuccess('Отчет сформирован');
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -27,6 +52,26 @@ export default function ReportsPage() {
           </p>
         </div>
       </header>
+      {success && (
+        <div style={{ marginBottom: 12 }}>
+          <Notice type="success" title="Готово" onClose={() => setSuccess('')}>
+            {success}
+          </Notice>
+        </div>
+      )}
+      {error && (
+        <div style={{ marginBottom: 12 }}>
+          <Notice type="error" title="Ошибка" onClose={() => setError('')}>
+            {error}
+          </Notice>
+        </div>
+      )}
+      {loading && (
+        <div className="panel panel-soft" style={{ marginBottom: 12 }}>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
+          <h2 style={{ marginTop: 10 }}>Обновляем список отчетов…</h2>
+        </div>
+      )}
       {hasRole(user, ['ADMIN', 'LIBRARIAN']) && (
         <form className="panel grid-form" onSubmit={create}>
           <label className="col-6">
@@ -47,7 +92,10 @@ export default function ReportsPage() {
             <input type="date" value={form.periodTo} onChange={(e) => setForm({ ...form, periodTo: e.target.value })} />
           </label>
           <div className="col-12 form-actions">
-            <button className="btn btn-primary">Сформировать</button>
+            <button className="btn btn-primary" disabled={saving}>
+              {saving && <span className="spinner" />}
+              Сформировать
+            </button>
           </div>
         </form>
       )}

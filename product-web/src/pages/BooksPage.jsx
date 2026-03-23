@@ -3,13 +3,16 @@ import { apiAssetUrl, request } from '../lib/api';
 import { getUser, hasRole } from '../lib/auth';
 import { Link, useNavigate } from 'react-router-dom';
 import placeholderCover from '../assets/cover-placeholder.svg';
+import Notice from '../components/Notice';
 
 export default function BooksPage() {
   const [books, setBooks] = useState([]);
   const [q, setQ] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [createSaving, setCreateSaving] = useState(false);
+  const [success, setSuccess] = useState('');
   const [createForm, setCreateForm] = useState({
     title: '',
     author: '',
@@ -25,12 +28,15 @@ export default function BooksPage() {
 
   const loadBooks = async () => {
     setError('');
+    setLoading(true);
     try {
       const query = q.trim();
       const data = await request(query ? `/api/books?q=${encodeURIComponent(query)}` : '/api/books');
       setBooks(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -41,12 +47,14 @@ export default function BooksPage() {
     if (!canManage) return;
     setCreateSaving(true);
     setError('');
+    setSuccess('');
     try {
       const payload = {
         ...createForm,
         publishYear: createForm.publishYear ? Number(createForm.publishYear) : null
       };
       const created = await request('/api/books', { method: 'POST', body: JSON.stringify(payload) });
+      setSuccess('Книга добавлена в каталог');
       navigate(`/books/${created.id}`);
     } catch (err) {
       setError(err.message);
@@ -92,7 +100,26 @@ export default function BooksPage() {
         </form>
       </div>
 
-      {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
+      {success && (
+        <div style={{ marginTop: 12 }}>
+          <Notice type="success" title="Готово" onClose={() => setSuccess('')}>
+            {success}
+          </Notice>
+        </div>
+      )}
+      {error && (
+        <div style={{ marginTop: 12 }}>
+          <Notice type="error" title="Ошибка" onClose={() => setError('')}>
+            {error}
+          </Notice>
+        </div>
+      )}
+      {loading && (
+        <div className="panel panel-soft" style={{ marginTop: 12 }}>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
+          <h2 style={{ marginTop: 10 }}>Обновляем каталог…</h2>
+        </div>
+      )}
 
       {canManage && createOpen && (
         <form className="panel" onSubmit={create} style={{ marginTop: 14 }}>
@@ -127,7 +154,10 @@ export default function BooksPage() {
               <textarea rows={4} value={createForm.description} onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })} />
             </label>
             <div className="col-12 form-actions">
-              <button className="btn btn-primary" disabled={createSaving}>Создать</button>
+              <button className="btn btn-primary" disabled={createSaving}>
+                {createSaving && <span className="spinner" />}
+                Создать
+              </button>
               <button type="button" className="btn btn-ghost" onClick={() => setCreateOpen(false)} disabled={createSaving}>Отмена</button>
             </div>
           </div>

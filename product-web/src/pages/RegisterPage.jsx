@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
 import { saveAuth } from '../lib/auth';
+import Notice from '../components/Notice';
+import { setFlash } from '../lib/flash';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -9,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const submit = async (e) => {
@@ -19,14 +22,18 @@ export default function RegisterPage() {
       return;
     }
     try {
+      setLoading(true);
       const data = await request('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({ email, password, fullName })
       });
       saveAuth(data);
+      setFlash({ type: 'success', text: 'Регистрация выполнена' });
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,12 +68,18 @@ export default function RegisterPage() {
             Повтор пароля
             <input type="password" value={password2} onChange={(e) => setPassword2(e.target.value)} autoComplete="new-password" />
           </label>
-          {error && <div className="error">{error}</div>}
-          <button className="btn btn-primary" type="submit">Зарегистрироваться</button>
+          {error && (
+            <Notice type="error" title="Ошибка регистрации" onClose={() => setError('')}>
+              {error}
+            </Notice>
+          )}
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading && <span className="spinner" />}
+            Зарегистрироваться
+          </button>
           <Link className="btn btn-ghost" to="/login">Уже есть аккаунт? Войти</Link>
         </form>
       </div>
     </div>
   );
 }
-

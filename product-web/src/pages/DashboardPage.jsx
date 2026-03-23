@@ -1,12 +1,26 @@
 import { useEffect, useState } from 'react';
 import { request } from '../lib/api';
+import Notice from '../components/Notice';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    request('/api/dashboard').then(setStats);
+    request('/api/dashboard')
+      .then(setStats)
+      .catch((err) => setError(err.message));
   }, []);
+
+  if (error) {
+    return (
+      <section>
+        <Notice type="error" title="Не удалось загрузить данные">
+          {error}
+        </Notice>
+      </section>
+    );
+  }
 
   if (!stats) {
     return (

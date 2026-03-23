@@ -1,6 +1,7 @@
 import { Link, NavLink } from 'react-router-dom';
 import { getUser, logout } from '../lib/auth';
 import { roleLabel } from '../lib/roles';
+import FlashHost from './FlashHost';
 
 export default function PublicLayout({ children }) {
   const user = getUser();
@@ -12,6 +13,7 @@ export default function PublicLayout({ children }) {
 
   return (
     <div className="content" style={{ paddingTop: 22 }}>
+      <FlashHost />
       <header className="app-header" style={{ maxWidth: 1120, margin: '0 auto 16px' }}>
         <div className="user-meta">
           <Link to="/books" className="brand" style={{ padding: '10px 12px' }}>
@@ -42,4 +44,3 @@ export default function PublicLayout({ children }) {
     </div>
   );
 }
-

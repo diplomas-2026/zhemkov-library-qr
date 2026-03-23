@@ -2,24 +2,32 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
 import { saveAuth } from '../lib/auth';
+import Notice from '../components/Notice';
+import { setFlash } from '../lib/flash';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('librarian79@school.local');
   const [password, setPassword] = useState('Lib123!');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
+      setError('');
       const data = await request('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password })
       });
       saveAuth(data);
+      setFlash({ type: 'success', text: 'Вы вошли в систему' });
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,8 +54,15 @@ export default function LoginPage() {
             Пароль
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </label>
-          {error && <div className="error">{error}</div>}
-          <button className="btn btn-primary" type="submit">Войти</button>
+          {error && (
+            <Notice type="error" title="Ошибка входа" onClose={() => setError('')}>
+              {error}
+            </Notice>
+          )}
+          <button className="btn btn-primary" type="submit" disabled={loading}>
+            {loading && <span className="spinner" />}
+            Войти
+          </button>
           <Link className="btn btn-ghost" to="/register">Нет аккаунта? Регистрация</Link>
         </form>
       </div>

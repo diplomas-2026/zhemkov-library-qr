@@ -1,9 +1,24 @@
 import { useEffect, useState } from 'react';
 import { request } from '../lib/api';
+import Notice from '../components/Notice';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
-  const load = async () => setUsers(await request('/api/users'));
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setUsers(await request('/api/users'));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => { load(); }, []);
 
   return (
@@ -17,6 +32,17 @@ export default function AdminUsersPage() {
           </p>
         </div>
       </header>
+      {loading && (
+        <div className="panel panel-soft" style={{ marginBottom: 12 }}>
+          <div className="kicker"><span className="spinner" />Загрузка</div>
+          <h2 style={{ marginTop: 10 }}>Получаем список пользователей…</h2>
+        </div>
+      )}
+      {error && (
+        <Notice type="error" title="Ошибка загрузки" onClose={() => setError('')}>
+          {error}
+        </Notice>
+      )}
       <div className="table-wrap">
         <table>
           <thead><tr><th>Email</th><th>ФИО</th><th>Роль</th><th>Активен</th></tr></thead>

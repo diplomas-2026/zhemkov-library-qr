@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { getUser, hasRole, logout } from '../lib/auth';
 import { roleLabel } from '../lib/roles';
+import FlashHost from './FlashHost';
 
 export default function Layout({ children }) {
   const user = getUser();
@@ -37,6 +38,7 @@ export default function Layout({ children }) {
         </nav>
       </aside>
       <main className="content">
+        <FlashHost />
         <header className="app-header">
           <div className="user-meta">
             <strong>{user?.fullName || 'Пользователь'}</strong>
