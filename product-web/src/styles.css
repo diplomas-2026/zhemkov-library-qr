@@ -175,15 +175,6 @@ label { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
   border: 1px solid rgba(23, 20, 18, 0.14);
   background: rgba(0,0,0,0.12);
 }
-.code-grid {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 12px;
-  align-items: start;
-}
-@media (max-width: 860px) {
-  .code-grid { grid-template-columns: 1fr; }
-}
 .kicker {
   display: inline-flex;
   align-items: center;

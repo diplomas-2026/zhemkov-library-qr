@@ -59,7 +59,7 @@ export default function ReadersPage() {
       </header>
 
       <form onSubmit={findByQr} className="panel panel-soft inline-form">
-        <input value={qrCode} onChange={(e) => setQrCode(e.target.value)} placeholder="QR/штрихкод читателя (например, RDR-79001)" />
+        <input value={qrCode} onChange={(e) => setQrCode(e.target.value)} placeholder="Штрихкод читателя (например, RDR-79001)" />
         <button type="button" className="btn btn-secondary" onClick={() => setScanOpen(true)} disabled={finding}>
           Сканировать
         </button>
@@ -72,7 +72,7 @@ export default function ReadersPage() {
       <ScannerDialog
         open={scanOpen}
         title="Сканирование кода читателя"
-        hint="Разрешите доступ к камере. Код можно сканировать с карточки читателя."
+        hint="Разрешите доступ к камере. Штрихкод можно сканировать с карточки читателя."
         onClose={() => setScanOpen(false)}
         onDetected={(text) => {
           setQrCode(text);

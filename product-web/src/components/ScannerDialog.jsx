@@ -76,7 +76,7 @@ export default function ScannerDialog({ open, title = 'Сканирование'
 
         <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ color: 'rgba(23,20,18,0.70)' }}>
-            Наведите камеру на QR/штрихкод читателя.
+            Наведите камеру на штрихкод читателя.
           </div>
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             Ввести вручную
@@ -86,4 +86,3 @@ export default function ScannerDialog({ open, title = 'Сканирование'
     </div>
   );
 }
-
