@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
 import Notice from '../components/Notice';
 import { readerRoleTypeLabel } from '../lib/labels';
+import ScannerDialog from '../components/ScannerDialog';
 
 export default function ReadersPage() {
   const [readers, setReaders] = useState([]);
@@ -10,6 +11,7 @@ export default function ReadersPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [finding, setFinding] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -26,18 +28,22 @@ export default function ReadersPage() {
 
   useEffect(() => { load(); }, []);
 
-  const findByQr = async (e) => {
-    e.preventDefault();
+  const openByCode = async (code) => {
     setError('');
     try {
       setFinding(true);
-      const data = await request(`/api/readers/qr/${encodeURIComponent(qrCode)}`);
+      const data = await request(`/api/readers/qr/${encodeURIComponent(code)}`);
       navigate(`/readers/${data.reader.id}`);
     } catch (err) {
       setError(err.message);
     } finally {
       setFinding(false);
     }
+  };
+
+  const findByQr = async (e) => {
+    e.preventDefault();
+    await openByCode(qrCode);
   };
 
   return (
@@ -53,12 +59,26 @@ export default function ReadersPage() {
       </header>
 
       <form onSubmit={findByQr} className="panel panel-soft inline-form">
-        <input value={qrCode} onChange={(e) => setQrCode(e.target.value)} placeholder="QR-код читателя (например, RDR-79001)" />
+        <input value={qrCode} onChange={(e) => setQrCode(e.target.value)} placeholder="QR/штрихкод читателя (например, RDR-79001)" />
+        <button type="button" className="btn btn-secondary" onClick={() => setScanOpen(true)} disabled={finding}>
+          Сканировать
+        </button>
         <button className="btn btn-primary" disabled={finding}>
           {finding && <span className="spinner" />}
           Найти
         </button>
       </form>
+
+      <ScannerDialog
+        open={scanOpen}
+        title="Сканирование кода читателя"
+        hint="Разрешите доступ к камере. Код можно сканировать с карточки читателя."
+        onClose={() => setScanOpen(false)}
+        onDetected={(text) => {
+          setQrCode(text);
+          openByCode(text);
+        }}
+      />
 
       {error && (
         <div style={{ marginTop: 12 }}>

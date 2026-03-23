@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { request } from '../lib/api';
 import Notice from '../components/Notice';
 import { loanStatusLabel, readerRoleTypeLabel } from '../lib/labels';
+import ReaderCodeCard from '../components/ReaderCodeCard';
 
 function formatDateTime(value) {
   if (!value) return '—';
@@ -87,6 +88,9 @@ export default function ReaderDetailsPage() {
       </header>
 
       <div className="grid-cards" style={{ gridTemplateColumns: 'repeat(12, 1fr)' }}>
+        <article style={{ gridColumn: 'span 12' }}>
+          <ReaderCodeCard code={reader.qrCode} />
+        </article>
         <article className="panel" style={{ gridColumn: 'span 6' }}>
           <div className="kicker">Активные</div>
           <h2 style={{ marginTop: 10 }}>Должен вернуть</h2>
