@@ -27,6 +27,12 @@ public class ReaderController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
+    @GetMapping("/{id}/profile")
+    public ReaderDtos.ReaderQrLookupResponse profile(@PathVariable Long id) {
+        return readerService.profile(id);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
     @PostMapping
     public ReaderDtos.ReaderResponse create(@Valid @RequestBody ReaderDtos.ReaderRequest request) {
         return readerService.create(request);

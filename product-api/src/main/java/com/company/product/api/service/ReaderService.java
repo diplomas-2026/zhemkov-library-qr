@@ -47,6 +47,12 @@ public class ReaderService {
         return new ReaderDtos.ReaderQrLookupResponse(toResponse(reader), loans);
     }
 
+    public ReaderDtos.ReaderQrLookupResponse profile(Long id) {
+        ReaderEntity reader = readerRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Читатель не найден"));
+        List<LoanDtos.LoanResponse> loans = loanService.listByReader(reader.getId());
+        return new ReaderDtos.ReaderQrLookupResponse(toResponse(reader), loans);
+    }
+
     private void patch(ReaderEntity entity, ReaderDtos.ReaderRequest request) {
         entity.setFullName(request.fullName());
         entity.setRoleType(request.roleType());

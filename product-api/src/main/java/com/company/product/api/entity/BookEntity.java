@@ -21,6 +21,8 @@ public class BookEntity {
     private String category;
     @Column(columnDefinition = "text")
     private String description;
+    @Column(name = "cover_url")
+    private String coverUrl;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -39,4 +41,6 @@ public class BookEntity {
     public void setCategory(String category) { this.category = category; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getCoverUrl() { return coverUrl; }
+    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
 }

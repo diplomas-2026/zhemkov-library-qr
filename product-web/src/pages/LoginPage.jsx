@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
 import { saveAuth } from '../lib/auth';
 
@@ -48,13 +48,7 @@ export default function LoginPage() {
           </label>
           {error && <div className="error">{error}</div>}
           <button className="btn btn-primary" type="submit">Войти</button>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => { setEmail('librarian79@school.local'); setPassword('Lib123!'); }}
-          >
-            Подставить тестовые данные
-          </button>
+          <Link className="btn btn-ghost" to="/register">Нет аккаунта? Регистрация</Link>
         </form>
       </div>
     </div>

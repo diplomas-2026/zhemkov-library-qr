@@ -5,7 +5,9 @@ import com.company.product.api.service.BookService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
@@ -19,6 +21,11 @@ public class BookController {
     @GetMapping("/books")
     public List<BookDtos.BookResponse> books(@RequestParam(required = false) String q) {
         return bookService.list(q);
+    }
+
+    @GetMapping("/books/{id}")
+    public BookDtos.BookResponse book(@PathVariable Long id) {
+        return bookService.get(id);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
@@ -37,6 +44,18 @@ public class BookController {
     @DeleteMapping("/books/{id}")
     public void deleteBook(@PathVariable Long id) {
         bookService.delete(id);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
+    @PostMapping(value = "/books/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public BookDtos.BookResponse uploadCover(@PathVariable Long id, @RequestPart("file") MultipartFile file) {
+        return bookService.uploadCover(id, file);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
+    @DeleteMapping("/books/{id}/cover")
+    public BookDtos.BookResponse removeCover(@PathVariable Long id) {
+        return bookService.removeCover(id);
     }
 
     @GetMapping("/copies")

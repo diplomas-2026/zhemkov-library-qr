@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class BookDtos {
     public record BookResponse(Long id, String title, String author, String isbn, String publisher, Integer publishYear,
-                               String category, String description, long availableCopies) {}
+                               String category, String description, String coverUrl, long availableCopies) {}
 
     public record BookRequest(@NotBlank String title, @NotBlank String author, String isbn, String publisher,
                               Integer publishYear, @NotBlank String category, String description) {}

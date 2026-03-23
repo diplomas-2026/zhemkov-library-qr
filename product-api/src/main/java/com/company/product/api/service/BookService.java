@@ -6,9 +6,14 @@ import com.company.product.api.entity.BookEntity;
 import com.company.product.api.entity.CopyStatus;
 import com.company.product.api.repository.BookCopyRepository;
 import com.company.product.api.repository.BookRepository;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class BookService {
@@ -24,6 +29,11 @@ public class BookService {
         List<BookEntity> books = (q == null || q.isBlank()) ? bookRepository.findAll() :
                 bookRepository.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(q, q);
         return books.stream().map(this::toBookResponse).toList();
+    }
+
+    public BookDtos.BookResponse get(Long id) {
+        BookEntity book = bookRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
+        return toBookResponse(book);
     }
 
     @Transactional
@@ -43,6 +53,41 @@ public class BookService {
     @Transactional
     public void delete(Long id) {
         bookRepository.deleteById(id);
+    }
+
+    @Transactional
+    public BookDtos.BookResponse uploadCover(Long bookId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Файл обложки не выбран");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Разрешены только изображения");
+        }
+        if (file.getSize() > 5L * 1024 * 1024) {
+            throw new IllegalArgumentException("Файл слишком большой (макс. 5 МБ)");
+        }
+
+        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
+        String ext = extensionFor(contentType);
+        String fileName = "book-" + bookId + "-" + UUID.randomUUID() + ext;
+        Path dir = Path.of("uploads", "covers");
+        Path target = dir.resolve(fileName);
+        try {
+            Files.createDirectories(dir);
+            file.transferTo(target);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Не удалось сохранить файл обложки");
+        }
+        book.setCoverUrl("/uploads/covers/" + fileName);
+        return toBookResponse(bookRepository.save(book));
+    }
+
+    @Transactional
+    public BookDtos.BookResponse removeCover(Long bookId) {
+        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
+        book.setCoverUrl(null);
+        return toBookResponse(bookRepository.save(book));
     }
 
     public List<BookDtos.CopyResponse> listCopies() {
@@ -84,10 +129,21 @@ public class BookService {
     private BookDtos.BookResponse toBookResponse(BookEntity b) {
         return new BookDtos.BookResponse(
                 b.getId(), b.getTitle(), b.getAuthor(), b.getIsbn(), b.getPublisher(), b.getPublishYear(),
-                b.getCategory(), b.getDescription(), copyRepository.countByBookIdAndStatus(b.getId(), CopyStatus.AVAILABLE));
+                b.getCategory(), b.getDescription(), b.getCoverUrl(),
+                copyRepository.countByBookIdAndStatus(b.getId(), CopyStatus.AVAILABLE));
     }
 
     private BookDtos.CopyResponse toCopyResponse(BookCopyEntity c) {
         return new BookDtos.CopyResponse(c.getId(), c.getBook().getId(), c.getBook().getTitle(), c.getInventoryNumber(), c.getStatus(), c.getLocation());
+    }
+
+    private String extensionFor(String contentType) {
+        return switch (contentType) {
+            case "image/png" -> ".png";
+            case "image/webp" -> ".webp";
+            case "image/gif" -> ".gif";
+            case "image/jpeg", "image/jpg" -> ".jpg";
+            default -> "";
+        };
     }
 }

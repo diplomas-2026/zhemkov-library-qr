@@ -3,6 +3,7 @@ package com.company.product.api.controller;
 import com.company.product.api.dto.AuthDtos;
 import com.company.product.api.service.AuthService;
 import com.company.product.api.service.CurrentUserService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,11 @@ public class AuthController {
     @PostMapping("/login")
     public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/register")
+    public AuthDtos.AuthResponse register(@Valid @RequestBody AuthDtos.RegisterRequest request) {
+        return authService.register(request);
     }
 
     @GetMapping("/me")

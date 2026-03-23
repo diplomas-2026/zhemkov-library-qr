@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { getUser, hasRole, logout } from '../lib/auth';
+import { roleLabel } from '../lib/roles';
 
 export default function Layout({ children }) {
   const user = getUser();
@@ -21,9 +22,13 @@ export default function Layout({ children }) {
         <nav className="nav-links">
           <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : undefined)}>Обзор</NavLink>
           <NavLink to="/books" className={({ isActive }) => (isActive ? 'active' : undefined)}>Каталог</NavLink>
-          <NavLink to="/readers" className={({ isActive }) => (isActive ? 'active' : undefined)}>Читатели</NavLink>
-          <NavLink to="/loans" className={({ isActive }) => (isActive ? 'active' : undefined)}>Выдача и возврат</NavLink>
-          <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : undefined)}>Отчеты</NavLink>
+          {hasRole(user, ['ADMIN', 'LIBRARIAN']) && (
+            <>
+              <NavLink to="/readers" className={({ isActive }) => (isActive ? 'active' : undefined)}>Читатели</NavLink>
+              <NavLink to="/loans" className={({ isActive }) => (isActive ? 'active' : undefined)}>Выдача и возврат</NavLink>
+              <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : undefined)}>Отчеты</NavLink>
+            </>
+          )}
           {hasRole(user, ['ADMIN']) && (
             <NavLink to="/admin/users" className={({ isActive }) => (isActive ? 'active' : undefined)}>
               Администрирование
@@ -35,7 +40,7 @@ export default function Layout({ children }) {
         <header className="app-header">
           <div className="user-meta">
             <strong>{user?.fullName || 'Пользователь'}</strong>
-            {user?.role && <span className="badge badge-accent">{user.role}</span>}
+            {user?.role && <span className="badge badge-accent">{roleLabel(user.role)}</span>}
           </div>
           <button className="btn btn-secondary" onClick={onLogout}>Выйти</button>
         </header>

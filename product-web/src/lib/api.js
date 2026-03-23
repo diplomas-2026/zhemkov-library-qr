@@ -2,10 +2,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export async function request(path, options = {}) {
   const token = localStorage.getItem('token');
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {})
-  };
+  const headers = { ...(options.headers || {}) };
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  if (!isFormData && !headers['Content-Type'] && !headers['content-type']) {
+    headers['Content-Type'] = 'application/json';
+  }
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -35,6 +36,12 @@ export async function request(path, options = {}) {
     return response.json();
   }
   return response.text();
+}
+
+export function apiAssetUrl(maybeRelativeUrl) {
+  if (!maybeRelativeUrl) return null;
+  if (maybeRelativeUrl.startsWith('http://') || maybeRelativeUrl.startsWith('https://')) return maybeRelativeUrl;
+  return `${API_URL}${maybeRelativeUrl}`;
 }
 
 export { API_URL };
