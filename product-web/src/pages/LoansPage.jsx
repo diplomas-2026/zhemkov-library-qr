@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { request } from '../lib/api';
 import { getUser, hasRole } from '../lib/auth';
 import Notice from '../components/Notice';
+import { loanStatusLabel } from '../lib/labels';
 
 export default function LoansPage() {
   const [loans, setLoans] = useState([]);
@@ -143,7 +144,7 @@ export default function LoansPage() {
                 <td>{loan.readerName}</td>
                 <td>{loan.readerQrCode}</td>
                 <td>{new Date(loan.dueAt).toLocaleString('ru-RU')}</td>
-                <td><span className="badge">{loan.status}</span></td>
+                <td><span className="badge">{loanStatusLabel(loan.status)}</span></td>
                 <td>
                   {hasRole(user, ['ADMIN', 'LIBRARIAN']) && loan.status === 'ACTIVE' ? (
                     <button type="button" className="btn btn-secondary" onClick={() => returnLoan(loan.id)} disabled={saving}>

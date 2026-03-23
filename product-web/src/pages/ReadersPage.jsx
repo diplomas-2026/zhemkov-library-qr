@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../lib/api';
 import Notice from '../components/Notice';
+import { readerRoleTypeLabel } from '../lib/labels';
 
 export default function ReadersPage() {
   const [readers, setReaders] = useState([]);
@@ -89,7 +90,7 @@ export default function ReadersPage() {
                 title="Открыть историю читателя"
               >
                 <td><strong>{r.fullName}</strong></td>
-                <td>{r.roleType}</td>
+                <td>{readerRoleTypeLabel(r.roleType)}</td>
                 <td>{r.className || '-'}</td>
                 <td>{r.qrCode}</td>
               </tr>

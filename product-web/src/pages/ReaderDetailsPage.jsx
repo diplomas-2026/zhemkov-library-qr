@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { request } from '../lib/api';
 import Notice from '../components/Notice';
+import { loanStatusLabel, readerRoleTypeLabel } from '../lib/labels';
 
 function formatDateTime(value) {
   if (!value) return '—';
@@ -77,7 +78,7 @@ export default function ReaderDetailsPage() {
           <div className="kicker">Читатели</div>
           <h1 className="page-title">{reader.fullName}</h1>
           <p className="page-subtitle" style={{ marginTop: 10 }}>
-            <span className="badge badge-accent">{reader.roleType}</span>{' '}
+            <span className="badge badge-accent">{readerRoleTypeLabel(reader.roleType)}</span>{' '}
             <span className="badge">QR: {reader.qrCode}</span>{' '}
             <span className="badge">Класс: {reader.className || '—'}</span>
           </p>
@@ -124,7 +125,7 @@ export default function ReaderDetailsPage() {
                     <td>{loan.bookTitle}</td>
                     <td>{formatDateTime(loan.issuedAt)}</td>
                     <td>{formatDateTime(loan.returnedAt)}</td>
-                    <td><span className="badge">{loan.status}</span></td>
+                    <td><span className="badge">{loanStatusLabel(loan.status)}</span></td>
                   </tr>
                 ))}
               </tbody>
