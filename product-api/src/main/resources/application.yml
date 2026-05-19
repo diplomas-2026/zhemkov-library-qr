@@ -24,5 +24,6 @@ security:
 springdoc:
   swagger-ui:
     path: /api/swagger-ui
+    config-url: /api/v3/api-docs/swagger-config
   api-docs:
     path: /api/v3/api-docs
