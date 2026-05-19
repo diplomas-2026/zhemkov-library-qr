@@ -33,7 +33,29 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/**/swagger-ui/**", "/**/v3/api-docs/**", "/**/v3/api-docs.yaml", "/**/webjars/**").permitAll()
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/books/api/auth/login",
+                                "/books/api/auth/register",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/api/swagger-ui/**",
+                                "/api/swagger-ui.html",
+                                "/api/v3/api-docs/**",
+                                "/api/v3/api-docs.yaml",
+                                "/books/api/swagger-ui/**",
+                                "/books/api/swagger-ui.html",
+                                "/books/api/v3/api-docs/**",
+                                "/books/api/v3/api-docs.yaml",
+                                "/webjars/**",
+                                "/api/webjars/**",
+                                "/books/api/webjars/**",
+                                "/error"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/books/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .anyRequest().authenticated())
