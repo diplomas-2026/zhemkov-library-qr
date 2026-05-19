@@ -3,7 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches:
-      - codex/library-qr
+      - main
   workflow_dispatch: {}
 
 concurrency:
