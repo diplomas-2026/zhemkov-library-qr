@@ -1,12 +1,14 @@
 
+
+
 ### Рисунок 2.25 – Фрагменткода реализации авторизации пользователя
 
 ### [Скрин кода](./img_1.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.26 – Фрагменткода проверки роли пользователя
@@ -14,9 +16,9 @@
 ### [Скрин кода](./img_2.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.27 – Фрагменткода получения и сохранения книг
@@ -24,9 +26,9 @@
 ### [Скрин кода](./img_3.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.28 – Фрагменткода работы с экземплярами книг
@@ -34,9 +36,9 @@
 ### [Скрин кода](./img_4.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.29 – Фрагменткода поиска читателя по штрихкоду
@@ -44,9 +46,9 @@
 ### [Скрин кода](./img_5.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.30 – Фрагменткода оформления выдачи книги
@@ -54,9 +56,9 @@
 ### [Скрин кода](./img_6.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.31 – Фрагменткода возврата книги
@@ -64,9 +66,9 @@
 ### [Скрин кода](./img_7.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.32 – Фрагменткода формирования CSV-отчета
@@ -74,9 +76,9 @@
 ### [Скрин кода](./img_8.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.33 – Фрагменткода получения статистики для дашборда
@@ -84,9 +86,9 @@
 ### [Скрин кода](./img_9.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 ### Рисунок 2.34 – Фрагменткода клиентского запроса к API
@@ -94,9 +96,9 @@
 ### [Скрин кода](./img_10.png)
 
 ```java
-@PostConstruct
-    public void init() {
-        System.out.println("Application started - 1.0.0");
+@PostMapping("/login")
+    public AuthDtos.AuthResponse login(@RequestBody AuthDtos.LoginRequest request) {
+        return authService.login(request);
     }
 ```
 
