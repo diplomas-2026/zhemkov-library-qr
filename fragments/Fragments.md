@@ -221,11 +221,36 @@ public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
     return new AuthDtos.AuthResponse(token, user.getId(), user.getEmail(), user.getFullName(), user.getRole());
 }
 
+public List<BookDtos.BookResponse> list(String q) {
+    List<BookEntity> books = (q == null || q.isBlank()) ? bookRepository.findAll() :
+            bookRepository.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(q, q);
+    return books.stream().map(this::toBookResponse).toList();
+}
+
+public BookDtos.BookResponse get(Long id) {
+    BookEntity book = bookRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
+    return toBookResponse(book);
+}
+
 @Transactional
 public BookDtos.BookResponse create(BookDtos.BookRequest request) {
     BookEntity entity = new BookEntity();
     patch(entity, request);
     return toBookResponse(bookRepository.save(entity));
+}
+
+@Transactional
+public BookDtos.BookResponse update(Long id, BookDtos.BookRequest request) {
+    BookEntity entity = bookRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
+    patch(entity, request);
+    return toBookResponse(bookRepository.save(entity));
+}
+
+@Transactional
+public BookDtos.CopyResponse createCopy(BookDtos.CopyRequest request) {
+    BookCopyEntity copy = new BookCopyEntity();
+    patchCopy(copy, request);
+    return toCopyResponse(copyRepository.save(copy));
 }
 
 @Transactional
@@ -242,6 +267,30 @@ public ReaderDtos.ReaderQrLookupResponse byQr(String qrCode) {
 }
 
 @Transactional
+public ReaderDtos.ReaderResponse myReader() {
+    var user = currentUserService.getCurrentUser();
+    ReaderEntity reader = readerRepository.findByUserId(user.getId())
+            .orElseGet(() -> readerRepository.findByContact(user.getEmail()).orElse(null));
+    if (reader == null) {
+        throw new IllegalArgumentException("Профиль читателя не найден");
+    }
+    if (reader.getUser() == null) {
+        reader.setUser(user);
+        readerRepository.save(reader);
+    }
+    return toResponse(reader);
+}
+
+public List<LoanDtos.LoanResponse> list() {
+    return loanRepository.findAll().stream().map(this::toResponse).toList();
+}
+
+public List<LoanDtos.LoanResponse> overdue() {
+    return loanRepository.findByStatusAndDueAtBefore(LoanStatus.ACTIVE, LocalDateTime.now())
+            .stream().map(this::toResponse).toList();
+}
+
+@Transactional
 public LoanDtos.LoanResponse issue(LoanDtos.IssueRequest request) {
     var reader = readerRepository.findByQrCode(request.readerQrCode())
             .orElseThrow(() -> new IllegalArgumentException("QR-код не найден"));
@@ -249,6 +298,9 @@ public LoanDtos.LoanResponse issue(LoanDtos.IssueRequest request) {
             .orElseThrow(() -> new IllegalArgumentException("Экземпляр не найден"));
     if (copy.getStatus() != CopyStatus.AVAILABLE) {
         throw new IllegalArgumentException("Экземпляр недоступен для выдачи");
+    }
+    if (request.dueAt().isBefore(LocalDateTime.now())) {
+        throw new IllegalArgumentException("Срок возврата не может быть в прошлом");
     }
 
     var actor = currentUserService.getCurrentUser();
@@ -279,6 +331,25 @@ public LoanDtos.LoanResponse returnLoan(Long id) {
     LoanEntity saved = loanRepository.save(loan);
     auditService.log(currentUserService.getCurrentUser(), "loan", saved.getId(), "RETURNED");
     return toResponse(saved);
+}
+
+public ReportDtos.ReportResponse generate(ReportDtos.ReportRequest request) {
+    String csv = buildCsv();
+    ReportEntity entity = new ReportEntity();
+    entity.setType(request.type());
+    entity.setPeriodFrom(request.periodFrom());
+    entity.setPeriodTo(request.periodTo());
+    entity.setGeneratedBy(currentUserService.getCurrentUser());
+    entity.setGeneratedAt(LocalDateTime.now());
+    entity.setCsvContent(csv);
+    ReportEntity saved = reportRepository.save(entity);
+    return new ReportDtos.ReportResponse(saved.getId(), saved.getType(), saved.getPeriodFrom(), saved.getPeriodTo(),
+            saved.getGeneratedBy().getFullName(), saved.getGeneratedAt());
+}
+
+public byte[] download(Long id) {
+    return reportRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Отчет не найден"))
+            .getCsvContent().getBytes(StandardCharsets.UTF_8);
 }
 
 private String buildCsv() {
