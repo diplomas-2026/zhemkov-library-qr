@@ -1,89 +1,50 @@
 
-### Рисунок 2.25 – Фрагменткода реализации авторизации пользователя  (брать с API)
+
+
+### Рисунок 2.25 – Фрагменткода регистрации и авторизации пользователя
 
 ### [Скрин кода](./img_1.png)
 
 ```java
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { apiAssetUrl, request } from '../lib/api';
-import { getUser, hasRole } from '../lib/auth';
-import placeholderCover from '../assets/cover-placeholder.svg';
-import Notice from '../components/Notice';
-import { setFlash } from '../lib/flash';
+@Service
+public class AuthService {
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-function coverSrc(coverUrl) {
-  return apiAssetUrl(coverUrl) || placeholderCover;
-}
-
-export default function BookDetailsPage() {
-  const { id } = useParams();
-  const bookId = Number(id);
-  const [book, setBook] = useState(null);
-  const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [fileError, setFileError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState(null);
-  const user = getUser();
-  const canManage = hasRole(user, ['ADMIN', 'LIBRARIAN']);
-  const navigate = useNavigate();
-
-  const load = async () => {
-    setError('');
-    setSuccess('');
-    setLoading(true);
-    try {
-      const data = await request(`/api/books/${bookId}`);
-      setBook(data);
-      setForm({
-        title: data.title || '',
-        author: data.author || '',
-        isbn: data.isbn || '',
-        publisher: data.publisher || '',
-        publishYear: data.publishYear || '',
-        category: data.category || '',
-        description: data.description || ''
-      });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    public AuthService(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
-  };
 
-  useEffect(() => {
-    if (!Number.isFinite(bookId)) return;
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bookId]);
+    public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+        var user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        String token = jwtService.generate(user);
+        return new AuthDtos.AuthResponse(token, user.getId(), user.getEmail(), user.getFullName(), user.getRole());
+    }
 
-  const subtitle = useMemo(() => {
-    if (!book) return '';
-    const parts = [book.author, book.category].filter(Boolean);
-    return parts.join(' • ');
-  }, [book]);
+    public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new IllegalArgumentException("Email уже зарегистрирован");
+        }
 
-  const save = async (e) => {
-    e.preventDefault();
-    if (!canManage) return;
-    setSaving(true);
-    setError('');
-    setSuccess('');
-    try {
-      const payload = {
-        ...form,
-        publishYear: form.publishYear ? Number(form.publishYear) : null
-      };
-      const data = await request(`/api/books/${bookId}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload)
-      });
-      setBook(data);
-      setSuccess('Изменения сохранены');
-    } catch (err) {
-      setError(err.message);
+        UserEntity user = new UserEntity();
+        user.setEmail(request.email());
+        user.setFullName(request.fullName());
+        user.setRole(UserRole.READER);
+        user.setActive(true);
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        userRepository.save(user);
+
+        String token = jwtService.generate(user);
+        return new AuthDtos.AuthResponse(token, user.getId(), user.getEmail(), user.getFullName(), user.getRole());
+    }
+}
 ```
 ### Рисунок 2.26 – Фрагменткода проверки роли пользователя
 
@@ -687,77 +648,32 @@ export default function ReportsPage() {
       <header className="page-header">
         <div>
 ```
-### Рисунок 2.33 – Фрагмент кода dashboard stats
+### Рисунок 2.33 – Фрагменткода получения dashboard статистики
 
 ### [Скрин кода](./img_9.png)
 
 ```java
-import { useEffect, useState } from 'react';
-import { request } from '../lib/api';
-import Notice from '../components/Notice';
+package com.company.product.api.controller;
 
-export default function DashboardPage() {
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState('');
+import com.company.product.api.dto.DashboardDto;
+import com.company.product.api.service.DashboardService;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-  useEffect(() => {
-    request('/api/dashboard')
-      .then(setStats)
-      .catch((err) => setError(err.message));
-  }, []);
+@RestController
+@RequestMapping("/api/dashboard")
+public class DashboardController {
+    private final DashboardService dashboardService;
 
-  if (error) {
-    return (
-      <section>
-        <Notice type="error" title="Не удалось загрузить данные">
-          {error}
-        </Notice>
-      </section>
-    );
-  }
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
 
-  if (!stats) {
-    return (
-      <section>
-        <div className="panel panel-soft">
-          <div className="kicker">Загрузка</div>
-          <h2 style={{ marginTop: 10 }}>Подготавливаем обзор библиотеки…</h2>
-        </div>
-      </section>
-    );
-  }
-
-  const cards = [
-    ['Книг', stats.totalBooks],
-    ['Экземпляров', stats.totalCopies],
-    ['Доступно', stats.availableCopies],
-    ['Активные выдачи', stats.activeLoans],
-    ['Просрочки', stats.overdueLoans],
-    ['Читателей', stats.readers],
-    ['Комментариев', stats.comments]
-  ];
-
-  return (
-    <section>
-      <header className="page-header">
-        <div>
-          <div className="kicker">Фонд и обслуживание</div>
-          <h1 className="page-title">Обзор <span className="hl">библиотеки</span></h1>
-          <p className="page-subtitle">
-            Ключевые показатели по книгам, экземплярам, выдачам и читателям — чтобы видеть картину за день.
-          </p>
-        </div>
-      </header>
-      <div className="grid-cards">
-        {cards.map(([label, value]) => (
-          <article className="panel metric" key={label}>
-            <h3>{label}</h3>
-            <p>{value}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
+    @GetMapping
+    public DashboardDto get() {
+        return dashboardService.get();
+    }
 }
 ```
 ### Рисунок 2.34 – Фрагменткода клиентского запроса к API
@@ -871,364 +787,55 @@ public class AuthService {
 
 package com.company.product.api.service;
 
-import com.company.product.api.dto.LoanDtos;
-import com.company.product.api.entity.CopyStatus;
-import com.company.product.api.entity.LoanEntity;
-import com.company.product.api.entity.LoanStatus;
-import com.company.product.api.repository.BookCopyRepository;
-import com.company.product.api.repository.LoanRepository;
-import com.company.product.api.repository.ReaderRepository;
+import com.company.product.api.dto.UserDtos;
+import com.company.product.api.entity.UserEntity;
 import com.company.product.api.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LoanService {
-    private final LoanRepository loanRepository;
-    private final BookCopyRepository copyRepository;
-    private final ReaderRepository readerRepository;
+public class UserService {
     private final UserRepository userRepository;
-    private final CurrentUserService currentUserService;
-    private final AuditService auditService;
+    private final PasswordEncoder passwordEncoder;
 
-    public LoanService(LoanRepository loanRepository, BookCopyRepository copyRepository, ReaderRepository readerRepository,
-                       UserRepository userRepository, CurrentUserService currentUserService, AuditService auditService) {
-        this.loanRepository = loanRepository;
-        this.copyRepository = copyRepository;
-        this.readerRepository = readerRepository;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.currentUserService = currentUserService;
-        this.auditService = auditService;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public List<LoanDtos.LoanResponse> list() {
-        return loanRepository.findAll().stream().map(this::toResponse).toList();
-    }
-
-    public List<LoanDtos.LoanResponse> listByReader(Long readerId) {
-        return loanRepository.findByReaderIdOrderByIssuedAtDesc(readerId).stream().map(this::toResponse).toList();
-    }
-
-    public List<LoanDtos.LoanResponse> overdue() {
-        return loanRepository.findByStatusAndDueAtBefore(LoanStatus.ACTIVE, LocalDateTime.now())
-                .stream().map(this::toResponse).toList();
+    public List<UserDtos.UserResponse> list() {
+        return userRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Transactional
-    public LoanDtos.LoanResponse issue(LoanDtos.IssueRequest request) {
-        var reader = readerRepository.findByQrCode(request.readerQrCode())
-                .orElseThrow(() -> new IllegalArgumentException("QR-код не найден"));
-        var copy = copyRepository.findById(request.copyId())
-                .orElseThrow(() -> new IllegalArgumentException("Экземпляр не найден"));
-        if (copy.getStatus() != CopyStatus.AVAILABLE) {
-            throw new IllegalArgumentException("Экземпляр недоступен для выдачи");
-        }
-        if (request.dueAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Срок возврата не может быть в прошлом");
-        }
-
-        var actor = currentUserService.getCurrentUser();
-        LoanEntity loan = new LoanEntity();
-        loan.setReader(reader);
-        loan.setCopy(copy);
-        loan.setIssuedBy(userRepository.findById(actor.getId()).orElseThrow());
-        loan.setIssuedAt(LocalDateTime.now());
-        loan.setDueAt(request.dueAt());
-        loan.setStatus(LoanStatus.ACTIVE);
-        copy.setStatus(CopyStatus.ISSUED);
-        copyRepository.save(copy);
-        LoanEntity saved = loanRepository.save(loan);
-        auditService.log(actor, "loan", saved.getId(), "ISSUED");
-        return toResponse(saved);
+    public UserDtos.UserResponse create(UserDtos.CreateUserRequest request) {
+        UserEntity user = new UserEntity();
+        user.setEmail(request.email());
+        user.setFullName(request.fullName());
+        user.setRole(request.role());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setActive(true);
+        return toResponse(userRepository.save(user));
     }
 
     @Transactional
-    public LoanDtos.LoanResponse returnLoan(Long id) {
-        LoanEntity loan = loanRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Выдача не найдена"));
-        if (loan.getReturnedAt() != null) {
-            throw new IllegalArgumentException("Книга уже возвращена");
-        }
-        loan.setReturnedAt(LocalDateTime.now());
-        loan.setStatus(LoanStatus.RETURNED);
-        loan.getCopy().setStatus(CopyStatus.AVAILABLE);
-        copyRepository.save(loan.getCopy());
-        LoanEntity saved = loanRepository.save(loan);
-        auditService.log(currentUserService.getCurrentUser(), "loan", saved.getId(), "RETURNED");
-        return toResponse(saved);
-    }
-
-    private LoanDtos.LoanResponse toResponse(LoanEntity loan) {
-        return new LoanDtos.LoanResponse(
-                loan.getId(), loan.getCopy().getId(), loan.getCopy().getInventoryNumber(), loan.getCopy().getBook().getTitle(),
-                loan.getReader().getId(), loan.getReader().getFullName(), loan.getReader().getQrCode(), loan.getIssuedAt(),
-                loan.getDueAt(), loan.getReturnedAt(), loan.getStatus());
-    }
-}
-
-package com.company.product.api.service;
-
-import com.company.product.api.dto.BookDtos;
-import com.company.product.api.entity.BookCopyEntity;
-import com.company.product.api.entity.BookEntity;
-import com.company.product.api.entity.CopyStatus;
-import com.company.product.api.repository.BookCopyRepository;
-import com.company.product.api.repository.BookRepository;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import jakarta.transaction.Transactional;
-import java.util.List;
-import java.util.UUID;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
-@Service
-public class BookService {
-    private final BookRepository bookRepository;
-    private final BookCopyRepository copyRepository;
-
-    public BookService(BookRepository bookRepository, BookCopyRepository copyRepository) {
-        this.bookRepository = bookRepository;
-        this.copyRepository = copyRepository;
-    }
-
-    public List<BookDtos.BookResponse> list(String q) {
-        List<BookEntity> books = (q == null || q.isBlank()) ? bookRepository.findAll() :
-                bookRepository.findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(q, q);
-        return books.stream().map(this::toBookResponse).toList();
-    }
-
-    public BookDtos.BookResponse get(Long id) {
-        BookEntity book = bookRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
-        return toBookResponse(book);
+    public UserDtos.UserResponse updateRole(Long id, UserDtos.UpdateRoleRequest request) {
+        UserEntity user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        user.setRole(request.role());
+        return toResponse(userRepository.save(user));
     }
 
     @Transactional
-    public BookDtos.BookResponse create(BookDtos.BookRequest request) {
-        BookEntity entity = new BookEntity();
-        patch(entity, request);
-        return toBookResponse(bookRepository.save(entity));
+    public UserDtos.UserResponse updateActive(Long id, UserDtos.UpdateActiveRequest request) {
+        UserEntity user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        user.setActive(request.active());
+        return toResponse(userRepository.save(user));
     }
 
-    @Transactional
-    public BookDtos.BookResponse update(Long id, BookDtos.BookRequest request) {
-        BookEntity entity = bookRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
-        patch(entity, request);
-        return toBookResponse(bookRepository.save(entity));
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        bookRepository.deleteById(id);
-    }
-
-    @Transactional
-    public BookDtos.BookResponse uploadCover(Long bookId, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Файл обложки не выбран");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("Разрешены только изображения");
-        }
-        if (file.getSize() > 5L * 1024 * 1024) {
-            throw new IllegalArgumentException("Файл слишком большой (макс. 5 МБ)");
-        }
-
-        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
-        String ext = extensionFor(contentType);
-        String fileName = "book-" + bookId + "-" + UUID.randomUUID() + ext;
-        Path dir = Path.of("uploads", "covers");
-        Path target = dir.resolve(fileName);
-        try {
-            Files.createDirectories(dir);
-            file.transferTo(target);
-        } catch (IOException ex) {
-            throw new IllegalArgumentException("Не удалось сохранить файл обложки");
-        }
-        book.setCoverUrl("/uploads/covers/" + fileName);
-        return toBookResponse(bookRepository.save(book));
-    }
-
-    @Transactional
-    public BookDtos.BookResponse removeCover(Long bookId) {
-        BookEntity book = bookRepository.findById(bookId).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
-        book.setCoverUrl(null);
-        return toBookResponse(bookRepository.save(book));
-    }
-
-    public List<BookDtos.CopyResponse> listCopies() {
-        return copyRepository.findAll().stream().map(this::toCopyResponse).toList();
-    }
-
-    @Transactional
-    public BookDtos.CopyResponse createCopy(BookDtos.CopyRequest request) {
-        BookCopyEntity copy = new BookCopyEntity();
-        patchCopy(copy, request);
-        return toCopyResponse(copyRepository.save(copy));
-    }
-
-    @Transactional
-    public BookDtos.CopyResponse updateCopy(Long id, BookDtos.CopyRequest request) {
-        BookCopyEntity copy = copyRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Экземпляр не найден"));
-        patchCopy(copy, request);
-        return toCopyResponse(copyRepository.save(copy));
-    }
-
-    private void patch(BookEntity entity, BookDtos.BookRequest request) {
-        entity.setTitle(request.title());
-        entity.setAuthor(request.author());
-        entity.setIsbn(request.isbn());
-        entity.setPublisher(request.publisher());
-        entity.setPublishYear(request.publishYear());
-        entity.setCategory(request.category());
-        entity.setDescription(request.description());
-    }
-
-    private void patchCopy(BookCopyEntity copy, BookDtos.CopyRequest request) {
-        BookEntity book = bookRepository.findById(request.bookId()).orElseThrow(() -> new IllegalArgumentException("Книга не найдена"));
-        copy.setBook(book);
-        copy.setInventoryNumber(request.inventoryNumber());
-        copy.setStatus(request.status());
-        copy.setLocation(request.location());
-    }
-
-    private BookDtos.BookResponse toBookResponse(BookEntity b) {
-        return new BookDtos.BookResponse(
-                b.getId(), b.getTitle(), b.getAuthor(), b.getIsbn(), b.getPublisher(), b.getPublishYear(),
-                b.getCategory(), b.getDescription(), b.getCoverUrl(),
-                copyRepository.countByBookIdAndStatus(b.getId(), CopyStatus.AVAILABLE));
-    }
-
-    private BookDtos.CopyResponse toCopyResponse(BookCopyEntity c) {
-        return new BookDtos.CopyResponse(c.getId(), c.getBook().getId(), c.getBook().getTitle(), c.getInventoryNumber(), c.getStatus(), c.getLocation());
-    }
-
-    private String extensionFor(String contentType) {
-        return switch (contentType) {
-            case "image/png" -> ".png";
-            case "image/webp" -> ".webp";
-            case "image/gif" -> ".gif";
-            case "image/jpeg", "image/jpg" -> ".jpg";
-            default -> "";
-        };
-    }
-}
-
-package com.company.product.api.service;
-
-import com.company.product.api.dto.ReportDtos;
-import com.company.product.api.entity.LoanStatus;
-import com.company.product.api.entity.ReportEntity;
-import com.company.product.api.repository.BookCopyRepository;
-import com.company.product.api.repository.BookRepository;
-import com.company.product.api.repository.LoanRepository;
-import com.company.product.api.repository.ReaderRepository;
-import com.company.product.api.repository.ReportRepository;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.List;
-import org.springframework.stereotype.Service;
-
-@Service
-public class ReportService {
-    private final ReportRepository reportRepository;
-    private final LoanRepository loanRepository;
-    private final BookRepository bookRepository;
-    private final ReaderRepository readerRepository;
-    private final BookCopyRepository copyRepository;
-    private final CurrentUserService currentUserService;
-
-    public ReportService(ReportRepository reportRepository, LoanRepository loanRepository, BookRepository bookRepository,
-                         ReaderRepository readerRepository, BookCopyRepository copyRepository, CurrentUserService currentUserService) {
-        this.reportRepository = reportRepository;
-        this.loanRepository = loanRepository;
-        this.bookRepository = bookRepository;
-        this.readerRepository = readerRepository;
-        this.copyRepository = copyRepository;
-        this.currentUserService = currentUserService;
-    }
-
-    public List<ReportDtos.ReportResponse> list() {
-        return reportRepository.findAll().stream()
-                .map(r -> new ReportDtos.ReportResponse(r.getId(), r.getType(), r.getPeriodFrom(), r.getPeriodTo(),
-                        r.getGeneratedBy().getFullName(), r.getGeneratedAt()))
-                .toList();
-    }
-
-    public ReportDtos.ReportResponse generate(ReportDtos.ReportRequest request) {
-        String csv = buildCsv();
-        ReportEntity entity = new ReportEntity();
-        entity.setType(request.type());
-        entity.setPeriodFrom(request.periodFrom());
-        entity.setPeriodTo(request.periodTo());
-        entity.setGeneratedBy(currentUserService.getCurrentUser());
-        entity.setGeneratedAt(LocalDateTime.now());
-        entity.setCsvContent(csv);
-        ReportEntity saved = reportRepository.save(entity);
-        return new ReportDtos.ReportResponse(saved.getId(), saved.getType(), saved.getPeriodFrom(), saved.getPeriodTo(),
-                saved.getGeneratedBy().getFullName(), saved.getGeneratedAt());
-    }
-
-    public byte[] download(Long id) {
-        return reportRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Отчет не найден"))
-                .getCsvContent().getBytes(StandardCharsets.UTF_8);
-    }
-
-    private String buildCsv() {
-        long books = bookRepository.count();
-        long readers = readerRepository.count();
-        long copies = copyRepository.count();
-        long activeLoans = loanRepository.findAll().stream().filter(l -> l.getStatus() == LoanStatus.ACTIVE).count();
-        long overdue = loanRepository.findByStatusAndDueAtBefore(LoanStatus.ACTIVE, LocalDateTime.now()).size();
-        return "metric,value\n" +
-                "books," + books + "\n" +
-                "copies," + copies + "\n" +
-                "readers," + readers + "\n" +
-                "active_loans," + activeLoans + "\n" +
-                "overdue," + overdue + "\n";
-    }
-}
-
-package com.company.product.api.service;
-
-import com.company.product.api.dto.DashboardDto;
-import com.company.product.api.entity.CopyStatus;
-import com.company.product.api.entity.LoanStatus;
-import com.company.product.api.repository.BookCopyRepository;
-import com.company.product.api.repository.BookRepository;
-import com.company.product.api.repository.CommentRepository;
-import com.company.product.api.repository.LoanRepository;
-import com.company.product.api.repository.ReaderRepository;
-import java.time.LocalDateTime;
-import org.springframework.stereotype.Service;
-
-@Service
-public class DashboardService {
-    private final BookRepository bookRepository;
-    private final BookCopyRepository copyRepository;
-    private final LoanRepository loanRepository;
-    private final ReaderRepository readerRepository;
-    private final CommentRepository commentRepository;
-
-    public DashboardService(BookRepository bookRepository, BookCopyRepository copyRepository, LoanRepository loanRepository,
-                            ReaderRepository readerRepository, CommentRepository commentRepository) {
-        this.bookRepository = bookRepository;
-        this.copyRepository = copyRepository;
-        this.loanRepository = loanRepository;
-        this.readerRepository = readerRepository;
-        this.commentRepository = commentRepository;
-    }
-
-    public DashboardDto get() {
-        long totalBooks = bookRepository.count();
-        long totalCopies = copyRepository.count();
-        long availableCopies = copyRepository.findByStatus(CopyStatus.AVAILABLE).size();
-        long activeLoans = loanRepository.findAll().stream().filter(l -> l.getStatus() == LoanStatus.ACTIVE).count();
-        long overdueLoans = loanRepository.findByStatusAndDueAtBefore(LoanStatus.ACTIVE, LocalDateTime.now()).size();
-        return new DashboardDto(totalBooks, totalCopies, availableCopies, activeLoans, overdueLoans, readerRepository.count(), commentRepository.count());
+    private UserDtos.UserResponse toResponse(UserEntity user) {
+        return new UserDtos.UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole(), user.isActive());
     }
 }
 ```
