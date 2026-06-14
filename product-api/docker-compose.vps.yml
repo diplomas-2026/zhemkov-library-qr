@@ -14,8 +14,10 @@ services:
     volumes:
       - ./seed-data:/app/seed-data:ro
       - ./users.txt:/app/users.txt
+      - uploads_data:/app/uploads
     ports:
       - "127.0.0.1:18027:8080"
 
 volumes:
   postgres_data:
+  uploads_data:

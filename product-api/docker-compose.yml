@@ -10,8 +10,11 @@ services:
       DB_USERNAME: library
       DB_PASSWORD: library
       JWT_SECRET: 7x3Yw2s6k9p1r4t7v0z2b5n8m1q4s7u0x3y6a9c2e5g8i1k4
+    volumes:
+      - uploads_data:/app/uploads
     ports:
       - "8080:8080"
 
 volumes:
   postgres_data:
+  uploads_data:

@@ -79,7 +79,7 @@ public class BookService {
         } catch (IOException ex) {
             throw new IllegalArgumentException("Не удалось сохранить файл обложки");
         }
-        book.setCoverUrl("/uploads/covers/" + fileName);
+        book.setCoverUrl("/api/uploads/covers/" + fileName);
         return toBookResponse(bookRepository.save(book));
     }
 

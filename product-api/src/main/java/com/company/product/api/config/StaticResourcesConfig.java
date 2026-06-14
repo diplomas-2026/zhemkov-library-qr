@@ -12,6 +12,7 @@ public class StaticResourcesConfig implements WebMvcConfigurer {
         Path uploadsDir = Path.of("uploads").toAbsolutePath().normalize();
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadsDir.toUri().toString());
+        registry.addResourceHandler("/api/uploads/**")
+                .addResourceLocations(uploadsDir.toUri().toString());
     }
 }
-
