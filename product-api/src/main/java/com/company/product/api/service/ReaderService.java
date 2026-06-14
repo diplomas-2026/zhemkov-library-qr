@@ -51,6 +51,17 @@ public class ReaderService {
 
     @Transactional
     public ReaderDtos.ReaderResponse myReader() {
+        return toResponse(resolveCurrentReader());
+    }
+
+    @Transactional
+    public ReaderDtos.ReaderQrLookupResponse myProfile() {
+        ReaderEntity reader = resolveCurrentReader();
+        List<LoanDtos.LoanResponse> loans = loanService.listByReader(reader.getId());
+        return new ReaderDtos.ReaderQrLookupResponse(toResponse(reader), loans);
+    }
+
+    private ReaderEntity resolveCurrentReader() {
         var user = currentUserService.getCurrentUser();
         ReaderEntity reader = readerRepository.findByUserId(user.getId())
                 .orElseGet(() -> readerRepository.findByContact(user.getEmail()).orElse(null));
@@ -61,7 +72,7 @@ public class ReaderService {
             reader.setUser(user);
             readerRepository.save(reader);
         }
-        return toResponse(reader);
+        return reader;
     }
 
     public ReaderDtos.ReaderQrLookupResponse profile(Long id) {

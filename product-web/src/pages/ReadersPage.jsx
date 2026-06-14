@@ -56,6 +56,9 @@ export default function ReadersPage() {
             Быстрый поиск читателя по штрихкоду и просмотр истории выдач.
           </p>
         </div>
+        <button type="button" className="btn btn-primary" onClick={() => setScanOpen(true)} disabled={finding}>
+          Открыть сканер
+        </button>
       </header>
 
       <form onSubmit={findByQr} className="panel panel-soft inline-form">

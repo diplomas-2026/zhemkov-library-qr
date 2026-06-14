@@ -32,6 +32,12 @@ public class ReaderController {
         return readerService.myReader();
     }
 
+    @PreAuthorize("hasRole('READER')")
+    @GetMapping("/me/profile")
+    public ReaderDtos.ReaderQrLookupResponse myProfile() {
+        return readerService.myProfile();
+    }
+
     @PreAuthorize("hasAnyRole('ADMIN','LIBRARIAN')")
     @GetMapping("/{id}/profile")
     public ReaderDtos.ReaderQrLookupResponse profile(@PathVariable Long id) {

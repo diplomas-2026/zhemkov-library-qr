@@ -27,6 +27,11 @@ public class UserController {
         return userService.create(request);
     }
 
+    @PutMapping("/{id}")
+    public UserDtos.UserResponse update(@PathVariable Long id, @Valid @RequestBody UserDtos.UpdateUserRequest request) {
+        return userService.update(id, request);
+    }
+
     @PutMapping("/{id}/role")
     public UserDtos.UserResponse updateRole(@PathVariable Long id, @Valid @RequestBody UserDtos.UpdateRoleRequest request) {
         return userService.updateRole(id, request);

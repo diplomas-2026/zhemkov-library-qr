@@ -11,6 +11,9 @@ public class UserDtos {
     public record CreateUserRequest(@Email @NotBlank String email, @NotBlank String fullName,
                                     @NotBlank String password, @NotNull UserRole role) {}
 
+    public record UpdateUserRequest(@Email @NotBlank String email, @NotBlank String fullName,
+                                    String password, @NotNull UserRole role, boolean active) {}
+
     public record UpdateRoleRequest(@NotNull UserRole role) {}
 
     public record UpdateActiveRequest(boolean active) {}
