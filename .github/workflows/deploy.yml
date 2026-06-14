@@ -18,6 +18,8 @@ jobs:
     env:
       FQDN: zhemkov-library-qr.matstart.ru
       DEPLOY_DIR: /opt/zhemkov-library-qr
+      COMPOSE_DIR: /opt
+      API_SERVICE: zhemkov-api
       WEB_ROOT: /var/www/projects/zhemkov-library-qr.matstart.ru
       API_INTERNAL_URL: http://127.0.0.1:18027
     steps:
@@ -89,8 +91,8 @@ jobs:
       - name: Restart api on VPS (docker compose)
         run: |
           ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "set -e; \
-            cd '${{ env.DEPLOY_DIR }}/product-api' && \
-            docker compose -f docker-compose.vps.yml up -d --build"
+            cd '${{ env.COMPOSE_DIR }}' && \
+            docker compose up -d --build '${{ env.API_SERVICE }}'"
 
       - name: Smoke check
         run: |

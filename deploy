@@ -3,13 +3,12 @@ set -euo pipefail
 
 FQDN="${FQDN:-zhemkov-library-qr.matstart.ru}"
 DEPLOY_DIR="${DEPLOY_DIR:-/opt/zhemkov-library-qr}"
+COMPOSE_DIR="${COMPOSE_DIR:-/opt}"
+API_SERVICE="${API_SERVICE:-zhemkov-api}"
 WEB_ROOT="${WEB_ROOT:-/var/www/projects/zhemkov-library-qr.matstart.ru}"
 BRANCH="${BRANCH:-main}"
-
-if [[ -z "${VPS_USER:-}" || -z "${VPS_HOST:-}" ]]; then
-  echo "Set VPS_USER and VPS_HOST before running deploy." >&2
-  exit 1
-fi
+VPS_USER="${VPS_USER:-root}"
+VPS_HOST="${VPS_HOST:-45.128.205.5}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -36,8 +35,8 @@ rsync -az \
   "${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/product-api/app.jar"
 
 ssh "${VPS_USER}@${VPS_HOST}" "set -e; \
-  cd '${DEPLOY_DIR}/product-api' && \
-  docker compose -f docker-compose.vps.yml up -d --build"
+  cd '${COMPOSE_DIR}' && \
+  docker compose up -d --build '${API_SERVICE}'"
 
 curl -fsS "https://${FQDN}/" >/dev/null
 curl -fsS -o /dev/null -w '%{http_code}\n' "https://${FQDN}/api/dashboard" | grep -E '^(200|401|403)$' >/dev/null
