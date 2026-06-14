@@ -1,6 +1,7 @@
 .DS_Store
 **/node_modules/
 **/target/
+product-api/app.jar
 **/.idea/
 **/dist/
 **/playwright-report/

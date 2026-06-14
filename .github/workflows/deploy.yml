@@ -31,6 +31,13 @@ jobs:
           cache: npm
           cache-dependency-path: product-web/package-lock.json
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
       - name: Build web
         working-directory: product-web
         env:
@@ -38,6 +45,12 @@ jobs:
         run: |
           npm ci
           npm run build
+
+      - name: Build api jar
+        working-directory: product-api
+        run: |
+          mvn -q -DskipTests clean package
+          cp target/product-api-0.0.1-SNAPSHOT.jar app.jar
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -55,7 +68,7 @@ jobs:
             product-web/dist/ \
             "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.WEB_ROOT }}/"
 
-      - name: Deploy api to VPS (docker compose)
+      - name: Prepare api repository on VPS
         run: |
           ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "set -e; \
             cd '${{ env.DEPLOY_DIR }}' && \
@@ -65,8 +78,18 @@ jobs:
               ts=\$(date +%Y%m%d-%H%M%S); \
               mv -f product-api/docker-compose.vps.yml product-api/docker-compose.vps.yml.bak.\${ts}; \
             fi && \
-            git pull --ff-only && \
-            cd product-api && \
+            git pull --ff-only"
+
+      - name: Upload api jar to VPS
+        run: |
+          rsync -az \
+            product-api/app.jar \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.DEPLOY_DIR }}/product-api/app.jar"
+
+      - name: Restart api on VPS (docker compose)
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "set -e; \
+            cd '${{ env.DEPLOY_DIR }}/product-api' && \
             docker compose -f docker-compose.vps.yml up -d --build"
 
       - name: Smoke check

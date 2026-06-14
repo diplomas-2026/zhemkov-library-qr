@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FQDN="${FQDN:-zhemkov-library-qr.matstart.ru}"
+DEPLOY_DIR="${DEPLOY_DIR:-/opt/zhemkov-library-qr}"
+WEB_ROOT="${WEB_ROOT:-/var/www/projects/zhemkov-library-qr.matstart.ru}"
+BRANCH="${BRANCH:-main}"
+
+if [[ -z "${VPS_USER:-}" || -z "${VPS_HOST:-}" ]]; then
+  echo "Set VPS_USER and VPS_HOST before running deploy." >&2
+  exit 1
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+cd "${ROOT_DIR}/product-web"
+VITE_API_URL="https://${FQDN}" npm ci
+VITE_API_URL="https://${FQDN}" npm run build
+
+cd "${ROOT_DIR}/product-api"
+mvn -q -DskipTests clean package
+cp target/product-api-0.0.1-SNAPSHOT.jar app.jar
+
+ssh "${VPS_USER}@${VPS_HOST}" "set -e; \
+  cd '${DEPLOY_DIR}' && \
+  git fetch --all && \
+  git checkout '${BRANCH}' && \
+  git pull --ff-only"
+
+rsync -az --delete \
+  "${ROOT_DIR}/product-web/dist/" \
+  "${VPS_USER}@${VPS_HOST}:${WEB_ROOT}/"
+
+rsync -az \
+  "${ROOT_DIR}/product-api/app.jar" \
+  "${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/product-api/app.jar"
+
+ssh "${VPS_USER}@${VPS_HOST}" "set -e; \
+  cd '${DEPLOY_DIR}/product-api' && \
+  docker compose -f docker-compose.vps.yml up -d --build"
+
+curl -fsS "https://${FQDN}/" >/dev/null
+curl -fsS -o /dev/null -w '%{http_code}\n' "https://${FQDN}/api/dashboard" | grep -E '^(200|401|403)$' >/dev/null
+
+echo "Deploy finished: https://${FQDN}"
