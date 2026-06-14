@@ -3,6 +3,7 @@ package com.company.product.api.service;
 import com.company.product.api.dto.LoanDtos;
 import com.company.product.api.dto.ReaderDtos;
 import com.company.product.api.entity.ReaderEntity;
+import com.company.product.api.entity.ReaderRoleType;
 import com.company.product.api.repository.ReaderRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -66,7 +67,13 @@ public class ReaderService {
         ReaderEntity reader = readerRepository.findByUserId(user.getId())
                 .orElseGet(() -> readerRepository.findByContact(user.getEmail()).orElse(null));
         if (reader == null) {
-            throw new IllegalArgumentException("Профиль читателя не найден");
+            reader = new ReaderEntity();
+            reader.setFullName(user.getFullName());
+            reader.setRoleType(ReaderRoleType.STUDENT);
+            reader.setContact(user.getEmail());
+            reader.setQrCode("RDR-U" + user.getId());
+            reader.setUser(user);
+            return readerRepository.save(reader);
         }
         if (reader.getUser() == null) {
             reader.setUser(user);
